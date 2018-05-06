@@ -121,10 +121,12 @@ def is_type_homogeneous(input_array, verbose=True):
 
     # Check for number of types
     if types_found.size == 1:
+        if verbose:
+            print('Input array contains the following type: {0}.'.format(types_found))
         return True
     elif types_found.size > 1:
         if verbose:
-            print('The following types have been found:', types_found)
+            print('Input array contains the following types {0}.:'.format(types_found))
         return False
     else:
         raise IOError('No types have been found.')
@@ -216,7 +218,7 @@ def contains_category(input_array, categories, exclusively=False, verbose=True):
         if verbose:
             for index, found in enumerate(categories_found):
                 if not found:
-                    print('Category {0} has not been found.'.format(categories[index]))
+                    print("Category '{0}' has not been found.".format(categories[index]))
         result = False
 
     # Check if additional categories are present if exclusively is set to True
@@ -227,7 +229,7 @@ def contains_category(input_array, categories, exclusively=False, verbose=True):
             if verbose:
                 for index, additional_category in enumerate(additional_categories):
                     if additional_category:
-                        print('Additional category {0} has been found.'.format(input_array_categories[index]))
+                        print("Additional category '{0}' has been found.".format(input_array_categories[index]))
             result = False
 
     return result
@@ -274,33 +276,104 @@ def is_within_range(input_array, lower_bound, upper_bound, verbose=True):
     return within_range
 
 
-def check_column_consistency(input_array, n_observations, array_type):
-    """
-    Iterates over an np_array and throws an exception if the array is too long/short, has missing values or has values
-    with types other than specified
+def fulfills_assumptions(input_array, verbosity, **assumptions):
 
-    :param input_array:     1-dimensional numpy array. Contains the input values
-    :param n_observations:  integer. length of the input_array
-    :param array_type:      list of strings.
+    # Specify private local variables
+    __allowed_parameters = ['contains_types', 'type_homogeneous', 'contains_nan', 'variable_type', 'restrictions']
+    __allowed_variable_types = ['categorical', 'metric']
+    __allowed_verbosity = ['none', 'low', 'high']
 
-    :return:                1-dimensional numpy array
-    """
-
-    # Check if inputs are valid
+    # Check if input array is valid
     _check_input_array(input_array)
 
-    if type(n_observations) is not int:
-        raise TypeError("Parameter 'n_observations' must be an integer.")
-    elif n_observations <= 0:
-        raise TypeError("Parameter 'n_observations' must be larger than zero.")
+    # Check for illegal parameters
+    for key in assumptions.keys():
+        if key not in __allowed_parameters:
+            raise TypeError("Parameter '{0}' is not allowed. Please use only the following parameters: {1}".format(
+                key, __allowed_parameters,
+                'See help for further information.'
+            ))
 
-    if type(array_type) is not str and type(array_type) is not list:
-        raise TypeError("Parameter 'array_type' must be a string or a list of strings.")
-    if any([True for entry in array_type if type(entry) is not str]):
-        raise TypeError("Values of parameter array_type must be strings (e.g. 'int', 'str', 'double', ...).")
+    # Check if at least one assumption is specified
+    if not any([key in __allowed_parameters for key in assumptions.keys()]):
+        raise TypeError('No assumption is specified. Please specify at least one assumption.',
+                        'See help for further information.')
 
-    # Check input size
-    if input_array.size != n_observations:
-        raise ValueError('Length of input array does not match specified array length.')
+    # Make sure, 'variable_type' is defined if 'restrictions' are passed
+    if 'restrictions' in assumptions.keys() and 'variable_type' not in assumptions.keys():
+        raise TypeError("Parameter 'variable_type' must be defined, if parameter 'restrictions' is used.",
+                        'See help for further information')
 
-    # Check array type
+    # Check if 'variable_type' is valid
+    if 'variable_type' in assumptions.keys() and assumptions['variable_type'] not in __allowed_variable_types:
+        raise TypeError("Value for 'variable type' ({0}) is not valid.".format(assumptions['variable_type']),
+                        "Please use only one of the following strings for parameter 'variable_type': {0}".format(
+                            __allowed_variable_types
+                        ))
+
+    # Check if 'verbosity' is valid
+    if type(verbosity) is not str:
+        raise TypeError("Parameter 'verbosity' must be a string. Please use one of the following strings: {0}.".format(
+            __allowed_verbosity
+        ))
+    elif verbosity not in __allowed_verbosity:
+        raise TypeError("Illegal value has been used for parameter 'verbosity': {0}.".format(verbosity),
+                        "Please use only one of the following strings: {0}.".format(__allowed_verbosity))
+
+    # Create result dictionary
+    results = {}
+
+    # Check if array contains specified types
+    if 'contains_types' in assumptions.keys():
+        results['contains_types'] = contains_types(input_array, assumptions['contains_types'],
+                                                   exclusively=True, verbose=(verbosity == 'high'))
+
+    # Check if array is type homogeneous
+    if 'type_homogeneous' in assumptions.keys():
+        if assumptions['type_homogeneous']:
+            results['type_homogeneous'] = (is_type_homogeneous(input_array, verbose=(verbosity == 'high')) == assumptions['type_homogeneous'])
+        else:
+            results['not_type_homogeneous'] = (is_type_homogeneous(input_array, verbose=(verbosity == 'high')) == assumptions['type_homogeneous'])
+
+    # Check if array contains NaN values
+    if 'contains_nan' in assumptions.keys():
+        if assumptions['contains_nan']:
+            results['contains_nan'] = (contains_nan(input_array) == assumptions['contains_nan'])
+        else:
+            results['contains_no_nan'] = (contains_nan(input_array) == assumptions['contains_nan'])
+
+    # Check if restrictions hold
+    if 'restrictions' in assumptions.keys():
+
+        # Check if variable is categorical or boolean
+        if assumptions['variable_type'] == 'categorical':
+            results['restrictions'] = contains_category(input_array, assumptions['restrictions'],
+                                                        exclusively=True, verbose=(verbosity == 'high'))
+
+        # Check if variable is metric
+        elif assumptions['variable_type'] == 'metric':
+            results['restrictions'] = is_within_range(input_array,
+                                                      lower_bound=min(assumptions['restrictions']),
+                                                      upper_bound=max(assumptions['restrictions']),
+                                                      verbose=(verbosity == 'high'))
+
+        # Raise exception if variable was neither categorical, metric or boolean
+        else:
+            raise IOError('Variable type was neither categorical, metric or boolean. This may not be your fault.')
+
+    # Summarize results
+    all_true = all(results.values())
+
+    # Print summary if 'verbose' is True
+    if verbosity == 'low' or verbosity == 'high':
+        if all_true:
+            print('\nAll tests have been passed successfully:')
+        else:
+            print('\nWarning: Some tests have failed. Please see the test results below:')
+
+        for key, value in results.items():
+            print('{0}: {1}'.format(key, value))
+        print('\n')
+
+    # Return result
+    return all_true
