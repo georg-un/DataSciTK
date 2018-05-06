@@ -21,6 +21,7 @@ def get_contained_types(input_array, unique=True, as_string=True):
     :param as_string:       True or False. Types are either returned as string or as type.
 
     :return:                1-dimensional numpy array containing either strings or types.
+
     """
 
     # Check if inputs are valid
@@ -58,6 +59,7 @@ def contains_types(input_array, types, exclusively=False, verbose=True):
     :param verbose:             True or False. Set to true for verbose output.
 
     :return:                    True or False
+
     """
 
     # Make sure parameter 'types' is a list
@@ -110,6 +112,7 @@ def is_type_homogeneous(input_array, verbose=True):
     :param verbose:         True for verbose output (default)
 
     :return:                True or False. True if all values have the same type.
+
     """
 
     # Check if input is valid
@@ -182,6 +185,7 @@ def contains_category(input_array, categories, exclusively=False, verbose=True):
     :param verbose:         True or False. Prints additional information to console if True.
 
     :return:                True or False.
+
     """
 
     # Transform categories parameter to list if it is not already one
@@ -277,6 +281,33 @@ def is_within_range(input_array, lower_bound, upper_bound, verbose=True):
 
 
 def fulfills_assumptions(input_array, verbosity, **assumptions):
+    """
+    Check the input array for a variable number of assumptions. Return true if all assumptions are fulfilled.
+
+
+    Sample call:
+
+    assumptions = {'contains_types':'int','contains_nan':False, 'type_homogeneous':True, 'variable_type':'metric', 'restrictions':[0, 90]})
+    fulfills_assumptions(my_array, verbosity='low', **assumptions)
+
+    or:
+
+    fulfills_assumptions(my_array, verbosity='high', **{'contains_nan':True, 'contains_types':['int', 'str']})
+
+
+    :param input_array:     1-dimensional numpy array
+    :param verbosity:       'none', 'low' or 'high'. Sets the verbosity level.
+    :param assumptions:     dictionary. Must contain at least one of the following keys:
+
+                            contains_types:     String or list of strings. Checks if these types are contained.
+                            type_homogeneous:   True or False. Checks for type homogeneity.
+                            contains_nan:       True or False. Check for NaN's.
+                            variable_type:      'categorical' or 'metric'. Needed for restrictions processing.
+                            restrictions:       List of all categories if categorical. List of lower and upper bound if metric.
+
+    :return:                True or False.
+
+    """
 
     # Specify private local variables
     __allowed_parameters = ['contains_types', 'type_homogeneous', 'contains_nan', 'variable_type', 'restrictions']
