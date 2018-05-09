@@ -45,7 +45,7 @@ def contains_nan(input_array):
     return False
 
 
-def recode_binary(input_array):
+def recode_nan_binary(input_array):
     """
     Replaces the NaN's in the input array by a 1 and all other values by a 0.
 
@@ -72,7 +72,7 @@ def recode_binary(input_array):
         binary_array = [np.isnan(value) for value in input_array]
 
     # convert from True and False to 1 and 0
-    binary_array = [[int(value) for value in binary_array]]
+    binary_array = np.asarray([int(value) for value in binary_array])
 
     return binary_array
 
