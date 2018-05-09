@@ -1,5 +1,7 @@
 import numpy as np
-from check_data import _check_input_array
+import scipy
+
+from _helper import _check_input_array
 
 
 def find_and_replace(input_array, pattern, replacement):
@@ -38,3 +40,5 @@ def find_and_replace(input_array, pattern, replacement):
     input_array[np.in1d(input_array, pattern)] = replacement
 
     return input_array
+
+
