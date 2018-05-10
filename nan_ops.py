@@ -8,6 +8,8 @@ from type_ops import contains_types
 from type_ops import match_by_type
 from type_ops import get_contained_types
 
+# TODO: add a function to count NaN's
+
 
 def contains_nan(input_array):
     """
