@@ -1,10 +1,87 @@
 import numpy as np
+import pandas as pd
 
 from _helper import _check_numpy_1d
+from _helper import _check_numpy_array_pandas_series_1d
 from type_ops import is_type_homogeneous
 from type_ops import get_contained_types
 
-# TODO: implement function similar to recode_nan_binary for multiple categories e.g. [1,2,3] = 1, [4,5,6] = 0
+
+def recode_binary_by_categories(input_array, to_0, to_1, verbose=False):
+    """
+    Recode a numpy array or pandas Series to 0 and 1 according to two lists of categories.
+
+    :param input_array:         1-dimensional numpy array or pandas Series
+    :param to_0:                Single value or list of values. Categories which should be coded to 0.
+    :param to_1:                Single value or list of values. Categories which should be coded to 1.
+    :param verbose:             True or False. If true a warning is printed, if some category is not found in data.
+
+    :return:                    1-dimensional numpy array containing only 1 and 0.
+
+    """
+
+    # Convert to_0 and to_1 to list if it is already one
+    if type(to_0) is not list:
+        to_0 = [to_0]
+    if type(to_1) is not list:
+        to_1 = [to_1]
+
+    # Get contained categories
+    contained_categories = get_contained_categories(input_array)
+
+    # Check if all categories are defined in to_0 and to_1
+    for category in contained_categories:
+        if category not in to_0 and category not in to_1:
+            raise TypeError("Data contains the category '{0}' which is neither defined in to_0 or to_1.".format(
+                category
+            ))
+
+    # Check if categories are defined for both lists
+    for category in to_0:
+        if category in to_1:
+            raise TypeError("Category '{0}' is defined in to_0 and to_1. A category must not be contained in both lists.".format(
+                category
+            ))
+
+    # Print warning if one of the defined categories has not been found in data
+    if verbose:
+        for category in to_0:
+            if category not in contained_categories:
+                print("Info: Category '{0}' from to_0 has not been found in data.".format(category))
+        for category in to_1:
+            if category not in contained_categories:
+                print("Info: Category '{0}' from to_1 has not been found in data.".format(category))
+
+    # Copy data to binary array
+    binary_array = input_array.copy()
+
+    # Loop over array and recode to 0 and 1
+    for index, value in enumerate(input_array):
+        if value in to_0:
+            binary_array[index] = 0
+        elif value in to_1:
+            binary_array[index] = 1
+        else:
+            raise IOError("Value '{0}' was neither in to_0 nor in to_1.".format(value))
+
+    return binary_array
+
+
+def get_contained_categories(input_array):
+    """
+    Get an array of all contained categories in a numpy array or pandas Series.
+
+    :param input_array:         1-dimensional numpy array or pandas Series
+    :return:                    1-dimensional numpy array containing all unique categories of the input
+
+    """
+
+    # Check if input is valid
+    _check_numpy_array_pandas_series_1d(input_array)
+
+    # Get all unique values (= categories) and return them
+    categories = pd.unique(input_array)
+    return categories
 
 
 def contains_category(input_array, categories, exclusively=False, verbose=True):
@@ -45,7 +122,7 @@ def contains_category(input_array, categories, exclusively=False, verbose=True):
         ))
 
     # Get all unique categories in the input array
-    input_array_categories = np.unique(input_array)
+    input_array_categories = get_contained_categories(input_array)
 
     # Check if all categories can be found
     categories_found = [x in input_array_categories for x in categories]
