@@ -85,14 +85,16 @@ def plot_best_n_fitting(input_array, fitted_distributions, best_n, x_label, titl
 
     if type(fitted_distributions) != list:
         raise TypeError("Input for 'fitted_distributions' must be a list of dictionaries.")
-    else:
-        for index in range(0, best_n):
-            if type(fitted_distributions[index]) is not dict:
-                raise TypeError("At least one element inside 'fitted_distributions' is not of type dict.")
-            if 'distribution' not in fitted_distributions[index].keys():
-                raise TypeError("At least one dict inside 'fitted_distribution does not contain the key 'distribution'.")
-            if 'parameters' not in fitted_distributions[index].keys():
-                raise TypeError("At least one dict inside 'fitted_distribution does not contain the key 'parameters'.")
+
+    best_n = min(best_n, len(fitted_distributions))
+
+    for index in range(0, best_n):
+        if type(fitted_distributions[index]) is not dict:
+            raise TypeError("At least one element inside 'fitted_distributions' is not of type dict.")
+        if 'distribution' not in fitted_distributions[index].keys():
+            raise TypeError("At least one dict inside 'fitted_distribution does not contain the key 'distribution'.")
+        if 'parameters' not in fitted_distributions[index].keys():
+            raise TypeError("At least one dict inside 'fitted_distribution does not contain the key 'parameters'.")
 
     if type(x_label) is not str:
         raise TypeError("Value for x_label must be of type string.")
