@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from _helper import _check_numpy_1d
+from _helper import _check_numpy_array_1d
 from _helper import _check_numpy_array_pandas_series_1d
 from type_ops import is_type_homogeneous
 from type_ops import get_contained_types
@@ -103,7 +103,7 @@ def contains_category(input_array, categories, exclusively=False, verbose=True):
         categories = [categories]
 
     # Check if inputs are valid
-    _check_numpy_1d(input_array)
+    _check_numpy_array_1d(input_array)
 
     for category in categories:
         if not isinstance(input_array[0], type(category)):
@@ -161,7 +161,7 @@ def count_elements_with_category(input_array, categories, verbose=False):
 
     """
 
-    _check_numpy_1d(input_array)
+    _check_numpy_array_1d(input_array)
 
     # Convert category to a list, if it is not already one
     if type(categories) is not list:

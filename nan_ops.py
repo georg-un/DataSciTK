@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from _helper import _check_numpy_1d
+from _helper import _check_numpy_array_1d
 import check_data as cd
 from utils import match_by_pattern
 from type_ops import contains_types
@@ -15,11 +15,11 @@ def count_nan(input_array):
 
     :param input_array:         1-dimensional numpy array
     :return:                    Integer. Number of NaN's found.
-    
+
     """
 
     # Check if input is valid
-    _check_numpy_1d(input_array)
+    _check_numpy_array_1d(input_array)
 
     nans = 0
 
@@ -76,7 +76,7 @@ def recode_nan_binary(input_array):
     """
 
     # Check if input is valid
-    _check_numpy_1d(input_array)
+    _check_numpy_array_1d(input_array)
 
     if not cd.is_type_homogeneous(input_array, verbose=False):
         raise TypeError("Input array contains multiple types ({0}). Please use only type homogeneous types.".format(
@@ -96,4 +96,3 @@ def recode_nan_binary(input_array):
     binary_array = np.asarray([int(value) for value in binary_array])
 
     return binary_array
-

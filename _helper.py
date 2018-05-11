@@ -3,7 +3,7 @@ from pandas import DataFrame
 from pandas import Series
 
 
-def _check_numpy_1d(input_array):
+def _check_numpy_array_1d(input_array):
     """
     Check if the input array is a 1-dimensional numpy array.
 
@@ -13,8 +13,6 @@ def _check_numpy_1d(input_array):
         raise TypeError("Parameter 'input_array' must be a numpy array")
     elif input_array.ndim != 1:
         raise TypeError("Parameter 'input_array' must be 1 dimensional")
-
-# TODO: rename functions
 
 
 def _check_numpy_array_pandas_series_1d(input_array):
@@ -28,7 +26,7 @@ def _check_numpy_array_pandas_series_1d(input_array):
         raise TypeError("Input for 'input_array' must be 1-dimensional.")
 
 
-def _check_numpy_pandas_1d(input_array):
+def _check_numpy_array_pandas_dataframe_series_1d(input_array):
     """
     Check if the input is a 1-dimensional numpy array, a pandas DataFrame with shape (n, 1)
     or a 1-dimensional pandas Series.

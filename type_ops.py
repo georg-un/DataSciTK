@@ -1,5 +1,5 @@
 import numpy as np
-from _helper import _check_numpy_1d
+from _helper import _check_numpy_array_1d
 from _helper import type_as_string
 
 
@@ -15,7 +15,7 @@ def get_contained_types(input_array, unique=True, as_string=True):
     """
 
     # Check if inputs are valid
-    _check_numpy_1d(input_array)
+    _check_numpy_array_1d(input_array)
 
     if type(unique) is not bool:
         raise TypeError("Parameter 'unique' must be boolean (True or False).")
@@ -104,7 +104,7 @@ def is_type_homogeneous(input_array, verbose=True):
     :return:                True or False. True if all values have the same type.
 
     """
-    _check_numpy_1d(input_array)
+    _check_numpy_array_1d(input_array)
 
     # Check if input is valid
     if type(verbose) is not bool:
@@ -139,7 +139,7 @@ def match_by_type(input_array, match_types):
     """
 
     # Check if inputs are valid
-    _check_numpy_1d(input_array)
+    _check_numpy_array_1d(input_array)
 
     if type(match_types) is not list:
         match_types = [match_types]

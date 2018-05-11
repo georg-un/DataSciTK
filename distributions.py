@@ -4,7 +4,7 @@ import pandas as pd
 import scipy.stats as st
 import matplotlib.pyplot as plt
 
-from _helper import _check_numpy_pandas_1d
+from _helper import _check_numpy_array_pandas_dataframe_series_1d
 
 
 def is_not_normally_distributed(input_array, alpha=0.05, alternative='two-sided', mode='approx', verbose=False):
@@ -23,7 +23,7 @@ def is_not_normally_distributed(input_array, alpha=0.05, alternative='two-sided'
     """
 
     # Check if inputs are valid
-    _check_numpy_pandas_1d(input_array)
+    _check_numpy_array_pandas_dataframe_series_1d(input_array)
 
     if type(alpha) is not float and type(alpha) is not np.float64:
         raise TypeError("Value for 'alpha' must be of type float, but is of type {0}.".format(type(alpha)))
@@ -76,7 +76,7 @@ def plot_best_n_fitting(input_array, fitted_distributions, best_n, x_label, titl
     """
 
     # Check if inputs are valid
-    _check_numpy_pandas_1d(input_array)
+    _check_numpy_array_pandas_dataframe_series_1d(input_array)
 
     if type(best_n) is not int:
         raise TypeError("Value for 'best_n' is of type {0}, but must be of type integer.".format(type(best_n)))
@@ -195,7 +195,7 @@ def fit_distribution_to_data(input_array, distribution, n_bins=200, verbose=Fals
     """
 
     # Check if inputs are valid
-    _check_numpy_pandas_1d(input_array)
+    _check_numpy_array_pandas_dataframe_series_1d(input_array)
 
     if distribution not in _get_distributions():
         raise TypeError("Distribution must be a scipy.stats distribution and defined in _get_distributions().")
