@@ -1,7 +1,7 @@
 import numpy as np
 import scipy
 
-from _helper import _check_input_array
+from _helper import _check_numpy_1d
 
 
 def find_and_replace(input_array, pattern, replacement):
@@ -22,7 +22,7 @@ def find_and_replace(input_array, pattern, replacement):
         pattern = [pattern]
 
     # Check if inputs are valid
-    _check_input_array(input_array)
+    _check_numpy_1d(input_array)
 
     for element in pattern:
         if not isinstance(input_array[0], type(element)):

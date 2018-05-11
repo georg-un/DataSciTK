@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from _helper import _check_input_array
+from _helper import _check_numpy_1d
 from type_ops import *
 
 
@@ -20,7 +20,7 @@ def is_within_range(input_array, lower_bound, upper_bound, verbose=True):
     """
 
     # Check if inputs are valid
-    _check_input_array(input_array)
+    _check_numpy_1d(input_array)
 
     if not isinstance(input_array[0], type(lower_bound)):
         raise TypeError('Type of lower bound ({0}) must match type of the input array values ({1}).'.format(
@@ -82,7 +82,7 @@ def fulfills_assumptions(input_array, verbosity, **assumptions):
     __allowed_verbosity = ['none', 'low', 'high']
 
     # Check if input array is valid
-    _check_input_array(input_array)
+    _check_numpy_1d(input_array)
 
     # Check for illegal parameters
     for key in assumptions.keys():

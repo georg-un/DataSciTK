@@ -4,10 +4,7 @@ import pandas as pd
 import scipy.stats as st
 import matplotlib.pyplot as plt
 
-from _helper import _check_input_array
-
-# TODO: restructure input checks
-# TODO: add a legend switch for plot function
+from _helper import _check_numpy_pandas_1d
 
 
 def is_not_normally_distributed(input_array, alpha=0.05, alternative='two-sided', mode='approx', verbose=False):
@@ -26,14 +23,7 @@ def is_not_normally_distributed(input_array, alpha=0.05, alternative='two-sided'
     """
 
     # Check if inputs are valid
-    if type(input_array) is not np.ndarray and type(input_array) is not pd.DataFrame and type(input_array) is not pd.Series:
-        raise TypeError("'input_array' must be either a numpy ndarray or a pandas DataFrame.")
-    elif type(input_array) is np.ndarray and input_array.ndim != 1:
-        raise TypeError("'input_array' must be a 1 dimensional numpy array or a pandas DataFrame with shape (m, 1) or a 1 dimensional pandas Series.")
-    elif type(input_array) is pd.DataFrame and input_array.shape[1] != 1:
-        raise TypeError("'input_array' must be a 1 dimensional numpy array or a pandas DataFrame with shape (m, 1) or a 1 dimensional pandas Series.")
-    elif type(input_array) is pd.Series and input_array.ndim != 1:
-        raise TypeError("'input_array' must be a 1 dimensional numpy array or a pandas DataFrame with shape (m, 1) or a 1 dimensional pandas Series.")
+    _check_numpy_pandas_1d(input_array)
 
     if type(alpha) is not float and type(alpha) is not np.float64:
         raise TypeError("Value for 'alpha' must be of type float, but is of type {0}.".format(type(alpha)))
@@ -69,7 +59,7 @@ def is_not_normally_distributed(input_array, alpha=0.05, alternative='two-sided'
         raise IOError("Did not get a p-value for the Kolmogorov-Smirnov-Test.")
 
 
-def plot_best_n_fitting(input_array, fitted_distributions, best_n, x_label, title='default', y_label='Frequency'):
+def plot_best_n_fitting(input_array, fitted_distributions, best_n, x_label, title='default', y_label='Frequency', legend=True):
     """
     Plot a histogram of the input as well as the probability distribution function of the n best matching distributions.
 
@@ -79,20 +69,14 @@ def plot_best_n_fitting(input_array, fitted_distributions, best_n, x_label, titl
     :param x_label:                     String. Label for the x-axis.
     :param title:                       String. Title of the plot.
     :param y_label:                     String. Label for the y-axis.
+    :param legend:                      True or False. If true legend is plotted.
 
     :return:                            None. Creates a plot.
 
     """
 
     # Check if inputs are valid
-    if type(input_array) is not np.ndarray and type(input_array) is not pd.DataFrame and type(input_array) is not pd.Series:
-        raise TypeError("'input_array' must be either a numpy ndarray or a pandas DataFrame.")
-    elif type(input_array) is np.ndarray and input_array.ndim != 1:
-        raise TypeError("'input_array' must be a 1 dimensional numpy array or a pandas DataFrame with shape (m, 1) or a 1 dimensional pandas Series.")
-    elif type(input_array) is pd.DataFrame and input_array.shape[1] != 1:
-        raise TypeError("'input_array' must be a 1 dimensional numpy array or a pandas DataFrame with shape (m, 1) or a 1 dimensional pandas Series.")
-    elif type(input_array) is pd.Series and input_array.ndim != 1:
-        raise TypeError("'input_array' must be a 1 dimensional numpy array or a pandas DataFrame with shape (m, 1) or a 1 dimensional pandas Series.")
+    _check_numpy_pandas_1d(input_array)
 
     if type(best_n) is not int:
         raise TypeError("Value for 'best_n' is of type {0}, but must be of type integer.".format(type(best_n)))
@@ -117,13 +101,16 @@ def plot_best_n_fitting(input_array, fitted_distributions, best_n, x_label, titl
     if type(title) is not str:
         raise TypeError("Value for title must be of type string.")
 
+    if type(legend) is not bool:
+        raise TypeError("Value for 'legend' must be of type boolean (True or False).")
+
     # Set default title
     if title == 'default':
         title = "Comparison between the best {0} fitting distributions.".format(best_n)
 
     # Create main plot
     plt.figure(figsize=(12, 8))
-    ax = input_array.plot(kind='hist', bins=50, normed=True, alpha=0.5, label='Data', legend=True)
+    ax = input_array.plot(kind='hist', bins=50, normed=True, alpha=0.5, label='Data', legend=legend)
     y_lim = (ax.get_ylim()[0], ax.get_ylim()[1] * 1.2)
     x_lim = ax.get_xlim()
 
@@ -136,7 +123,7 @@ def plot_best_n_fitting(input_array, fitted_distributions, best_n, x_label, titl
 
         # Get PDF and plot it
         pdf = _get_pdf(distribution=distribution, parameters=parameters)
-        pdf.plot(lw=2, label=distribution_name.capitalize(), legend=True, ax=ax)
+        pdf.plot(lw=2, label=distribution_name.capitalize(), legend=legend, ax=ax)
 
     # Set focus on histogram
     plt.ylim(y_lim)
@@ -208,14 +195,7 @@ def fit_distribution_to_data(input_array, distribution, n_bins=200, verbose=Fals
     """
 
     # Check if inputs are valid
-    if type(input_array) is not np.ndarray and type(input_array) is not pd.DataFrame and type(input_array) is not pd.Series:
-        raise TypeError("'input_array' must be either a numpy ndarray or a pandas DataFrame.")
-    elif type(input_array) is np.ndarray and input_array.ndim != 1:
-        raise TypeError("'input_array' must be a 1 dimensional numpy array or a pandas DataFrame with shape (m, 1) or a 1 dimensional pandas Series.")
-    elif type(input_array) is pd.DataFrame and input_array.shape[1] != 1:
-        raise TypeError("'input_array' must be a 1 dimensional numpy array or a pandas DataFrame with shape (m, 1) or a 1 dimensional pandas Series.")
-    elif type(input_array) is pd.Series and input_array.ndim != 1:
-        raise TypeError("'input_array' must be a 1 dimensional numpy array or a pandas DataFrame with shape (m, 1) or a 1 dimensional pandas Series.")
+    _check_numpy_pandas_1d(input_array)
 
     if distribution not in _get_distributions():
         raise TypeError("Distribution must be a scipy.stats distribution and defined in _get_distributions().")

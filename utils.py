@@ -1,12 +1,12 @@
 import numpy as np
-from _helper import _check_input_array
+from _helper import _check_numpy_1d
 from type_ops import is_type_homogeneous
 from type_ops import get_contained_types
 
 
 def match_by_pattern(input_array, patterns):
 
-    _check_input_array(input_array)
+    _check_numpy_1d(input_array)
 
     if type(patterns) is not list:
         patterns = [patterns]
