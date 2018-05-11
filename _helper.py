@@ -15,6 +15,15 @@ def _check_numpy_array_1d(input_array):
         raise TypeError("Parameter 'input_array' must be 1 dimensional")
 
 
+def _check_pandas_dataframe_nd(data):
+    """
+    Check if input is a pandas DataFrame.
+
+    """
+    if type(data) is not DataFrame:
+        raise TypeError("Argument for 'data' must be a pandas DataFrame.")
+
+
 def _check_numpy_array_pandas_series_1d(input_array):
     """
     Check if the input is a 1-dimensional numpy array or pandas Series.

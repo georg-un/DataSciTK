@@ -1,12 +1,12 @@
 import numpy as np
-from _helper import _check_numpy_array_1d
+from _helper import _check_numpy_array_pandas_series_1d
 from _helper import type_as_string
 
 
 def get_contained_types(input_array, unique=True, as_string=True):
     """
     Gets all types in the input array
-    :param input_array:     1-dimensional numpy array
+    :param input_array:     1-dimensional numpy array or pandas Series
     :param unique:          True or False. If true types are returned uniquely as strings.
     :param as_string:       True or False. Types are either returned as string or as type.
 
@@ -15,7 +15,7 @@ def get_contained_types(input_array, unique=True, as_string=True):
     """
 
     # Check if inputs are valid
-    _check_numpy_array_1d(input_array)
+    _check_numpy_array_pandas_series_1d(input_array)
 
     if type(unique) is not bool:
         raise TypeError("Parameter 'unique' must be boolean (True or False).")
@@ -43,7 +43,7 @@ def contains_types(input_array, types, exclusively=False, verbose=True):
     Check if the input array contains certain types. If exclusively is set to True, check if the input array
     contains ONLY the specified types.
 
-    :param input_array:         1-dimensional numpy array
+    :param input_array:         1-dimensional numpy array or pandas Series
     :param types:               string or list of strings. Specifies the types (e.g. ['str', 'int']
     :param exclusively:         True or False. If set to True, check if ONLY the specified types are present
     :param verbose:             True or False. Set to true for verbose output.
@@ -98,13 +98,13 @@ def is_type_homogeneous(input_array, verbose=True):
     """
     Check if all values of the input array have the same type.
 
-    :param input_array:     1-dimensional numpy array
+    :param input_array:     1-dimensional numpy array or pandas Series
     :param verbose:         True for verbose output (default)
 
     :return:                True or False. True if all values have the same type.
 
     """
-    _check_numpy_array_1d(input_array)
+    _check_numpy_array_pandas_series_1d(input_array)
 
     # Check if input is valid
     if type(verbose) is not bool:
@@ -131,7 +131,7 @@ def match_by_type(input_array, match_types):
     Searches for all values in the input string which match one of the given types. Returns a array in the same length
     as the input array containing True and False values for the indexes where matches have been found or not.
 
-    :param input_array:     1-dimensional numpy array
+    :param input_array:     1-dimensional numpy array or pandas Series
     :param match_types:     String or list of strings. Defines the types which should be matched, e.g. ['int', 'float']
 
     :return:                1-dimensional numpy array containing True and False values for the indexes of the matches
@@ -139,7 +139,7 @@ def match_by_type(input_array, match_types):
     """
 
     # Check if inputs are valid
-    _check_numpy_array_1d(input_array)
+    _check_numpy_array_pandas_series_1d(input_array)
 
     if type(match_types) is not list:
         match_types = [match_types]
