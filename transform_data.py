@@ -1,18 +1,17 @@
 import numpy as np
 import scipy
 
-from _helper import _check_numpy_array_1d
+from _input_checks import check_numpy_array_1d
 
 
-def find_and_replace(input_array, pattern, replacement):
+def find_and_replace(data, pattern, replacement):
     """
-    Take a 1 dimensional numpy array as input. If a value of the array matches at least one pattern exactly,
-    replace it with the specified replacement.
+    If a value in the data matches at least one pattern exactly, replace it with the specified replacement.
 
 
-    :param input_array:     1-dimensional numpy array. Contains the input values.
-    :param pattern:         Single value or list. Must be the same type as the values in the input array.
-    :param replacement:     Single value. Must be the same type as the values in the input array.
+    :param data:            1-dimensional numpy array. Contains the input values.
+    :param pattern:         Single value or list. Must be the same type as the values in 'data'.
+    :param replacement:     Single value. Must be the same type as the values in 'data'.
 
     :return:                1-dimensional numpy array
     """
@@ -22,23 +21,23 @@ def find_and_replace(input_array, pattern, replacement):
         pattern = [pattern]
 
     # Check if inputs are valid
-    _check_numpy_array_1d(input_array)
+    check_numpy_array_1d(data, 'data')
 
     for element in pattern:
-        if not isinstance(input_array[0], type(element)):
-            raise TypeError('Type of pattern {0} ({1}) must match type of the input array values ({2})'.format(
+        if not isinstance(data[0], type(element)):
+            raise TypeError("Type of pattern {0} ({1}) must match type of values in 'data' ({2})".format(
                 element,
                 type(element),
-                type(input_array[0])))
+                type(data[0])))
 
-    if not isinstance(input_array[0], type(replacement)):
-        print('Warning: Type of replacement ({0}) does not match type of the input array values ({1}). '.format(
+    if not isinstance(data[0], type(replacement)):
+        print("Warning: Type of replacement ({0}) does not match type of the values in 'data' ({1}). ".format(
             type(replacement),
-            type(input_array[0])))
+            type(data[0])))
 
     # Replace values
-    input_array[np.in1d(input_array, pattern)] = replacement
+    data[np.in1d(data, pattern)] = replacement
 
-    return input_array
+    return data
 
 

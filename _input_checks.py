@@ -4,19 +4,23 @@ from pandas import DataFrame
 from pandas import Series
 
 
-def _check_numpy_array_1d(input_array):
+def check_numpy_array_1d(data, name):
     """
     Check if the input array is a 1-dimensional numpy array.
 
     """
 
-    if type(input_array) is not ndarray:
-        raise TypeError("Parameter 'input_array' must be a numpy array")
-    elif input_array.ndim != 1:
-        raise TypeError("Parameter 'input_array' must be 1 dimensional")
+    if type(data) is not ndarray:
+        raise TypeError("Parameter '{0}' must be a numpy array".format(
+            str(name)
+        ))
+    elif data.ndim != 1:
+        raise TypeError("Parameter '{0}' must be 1 dimensional".format(
+            str(name)
+        ))
 
 
-def _check_pandas_dataframe_1d(data, name):
+def check_pandas_dataframe_1d(data, name):
     """
     Check if the input is a 1-dimensional pandas DataFrame.
 
@@ -34,43 +38,57 @@ def _check_pandas_dataframe_1d(data, name):
         ))
 
 
-def _check_pandas_dataframe_nd(data):
+def check_pandas_dataframe_nd(data, name):
     """
     Check if input is a pandas DataFrame.
 
     """
     if type(data) is not DataFrame:
-        raise TypeError("Argument for 'data' must be a pandas DataFrame.")
+        raise TypeError("Argument for '{0}' must be a pandas DataFrame.".format(
+            str(name)
+        ))
 
 
-def _check_numpy_array_pandas_series_1d(input_array):
+def check_numpy_array_pandas_series_1d(data, name):
     """
     Check if the input is a 1-dimensional numpy array or pandas Series.
 
     """
-    if type(input_array) is not ndarray and type(input_array) is not Series:
-        raise TypeError("Input for 'input_array' must be either a numpy ndarray or a pandas Series.")
-    elif input_array.ndim != 1:
-        raise TypeError("Input for 'input_array' must be 1-dimensional.")
+    if type(data) is not ndarray and type(data) is not Series:
+        raise TypeError("Input for '{0}' must be either a numpy ndarray or a pandas Series.".format(
+            str(name)
+        ))
+    elif data.ndim != 1:
+        raise TypeError("Input for '{0}' must be 1-dimensional.".format(
+            str(name)
+        ))
 
 
-def _check_numpy_array_pandas_dataframe_series_1d(input_array):
+def check_numpy_array_pandas_dataframe_series_1d(data, name):
     """
     Check if the input is a 1-dimensional numpy array, a pandas DataFrame with shape (n, 1)
     or a 1-dimensional pandas Series.
 
     """
-    if type(input_array) is not ndarray and type(input_array) is not DataFrame and type(input_array) is not Series:
-        raise TypeError("'input_array' must be either a numpy ndarray, a pandas DataFrame or a pandas Series.")
-    elif type(input_array) is ndarray and input_array.ndim != 1:
-        raise TypeError("'input_array' must be a 1 dimensional numpy array or a pandas DataFrame with shape (m, 1) or a 1 dimensional pandas Series.")
-    elif type(input_array) is DataFrame and input_array.shape[1] != 1:
-        raise TypeError("'input_array' must be a 1 dimensional numpy array or a pandas DataFrame with shape (m, 1) or a 1 dimensional pandas Series.")
-    elif type(input_array) is Series and input_array.ndim != 1:
-        raise TypeError("'input_array' must be a 1 dimensional numpy array or a pandas DataFrame with shape (m, 1) or a 1 dimensional pandas Series.")
+    if type(data) is not ndarray and type(data) is not DataFrame and type(data) is not Series:
+        raise TypeError("'{0}' must be either a numpy ndarray, a pandas DataFrame or a pandas Series.".format(
+            str(name)
+        ))
+    elif type(data) is ndarray and data.ndim != 1:
+        raise TypeError("'{0}' must be a 1 dimensional numpy array or a pandas DataFrame with shape (m, 1) or a 1 dimensional pandas Series.".format(
+            str(name)
+        ))
+    elif type(data) is DataFrame and data.shape[1] != 1:
+        raise TypeError("'{0}' must be a 1 dimensional numpy array or a pandas DataFrame with shape (m, 1) or a 1 dimensional pandas Series.".format(
+            str(name)
+        ))
+    elif type(data) is Series and data.ndim != 1:
+        raise TypeError("'{0}' must be a 1 dimensional numpy array or a pandas DataFrame with shape (m, 1) or a 1 dimensional pandas Series.".format(
+            str(name)
+        ))
 
 
-def _check_string(data, name):
+def check_string(data, name):
     """
     Check if input is a string.
 
@@ -82,7 +100,7 @@ def _check_string(data, name):
         ))
 
 
-def _check_list_of_strings(data, name):
+def check_list_of_strings(data, name):
     """
     Check if input is a list of strings.
 
@@ -100,7 +118,7 @@ def _check_list_of_strings(data, name):
                 ))
 
 
-def _check_integer(data, name):
+def check_integer(data, name):
     """
     Check if input is an integer.
 
@@ -112,7 +130,7 @@ def _check_integer(data, name):
         ))
 
 
-def _check_boolean(data, name):
+def check_boolean(data, name):
     """
     Check if input is boolean.
 
@@ -124,7 +142,7 @@ def _check_boolean(data, name):
         ))
 
 
-def _check_float(data, name):
+def check_float(data, name):
     """
     Check if input is of type float.
 
@@ -135,21 +153,3 @@ def _check_float(data, name):
             type(data)
         ))
 
-
-
-
-
-
-
-
-
-def type_as_string(obj):
-    """
-    Takes an object and returns its type as string.
-
-    :param obj:     Any object
-    :return:        Type of the object as a string value.
-
-    """
-
-    return str(type(obj))[8:-2]

@@ -4,47 +4,49 @@ import pandas as pd
 import scipy.stats as st
 import matplotlib.pyplot as plt
 
-from _helper import _check_numpy_array_pandas_dataframe_series_1d
+from _input_checks import check_numpy_array_pandas_dataframe_series_1d
+from _input_checks import check_float
+from _input_checks import check_string
+from _input_checks import check_boolean
+from _input_checks import check_integer
+
+# TODO: Add function which predicts the probability of a value given a data sample (plot would be nice)
 
 
-def is_not_normally_distributed(input_array, alpha=0.05, alternative='two-sided', mode='approx', verbose=False):
+def is_not_normally_distributed(data, alpha=0.05, alternative='two-sided', mode='approx', verbose=False):
     """
-    Performs a Kolmogorov-Smirnov-Test for normal distribution. The tested hypothesis is that the input array is not
+    Performs a Kolmogorov-Smirnov-Test for normal distribution. The tested hypothesis is that the data is not
     normally distributed. If the p-value is smaller than alpha, it returns True.
 
-    :param input_array:         1-dimensional numpy array or pandas DataFrame of shape (m, 1).
+    :param data:                1-dimensional numpy array or pandas DataFrame of shape (m, 1).
     :param alpha:               Float. Defines the significance level.
     :param alternative:         String. Either 'two-sided', 'less' or 'greater'. Defines the alternative hypothesis.
     :param mode:                String. Either 'approx' or 'asymp'. See scipy.stats.kstest for more info.
     :param verbose:             True or False. True for verbose output.
 
-    :return:                    True if input is not normally distributed. False if alternative hypothesis cannot be rejected.
+    :return:                    True if data is not normally distributed. False if alternative hypothesis cannot be rejected.
 
     """
 
     # Check if inputs are valid
-    _check_numpy_array_pandas_dataframe_series_1d(input_array)
+    check_numpy_array_pandas_dataframe_series_1d(data, 'data')
 
-    if type(alpha) is not float and type(alpha) is not np.float64:
-        raise TypeError("Value for 'alpha' must be of type float, but is of type {0}.".format(type(alpha)))
-    elif alpha <= 0.0 or alpha >= 1:
+    check_float(alpha, 'alpha')
+    if alpha <= 0.0 or alpha >= 1:
         raise TypeError("Value for 'alpha' is {0}, but must be a value between 0 and 1.".format(alpha))
 
-    if type(alternative) is not str:
-        raise TypeError("Value for 'alternative' must be a string.")
-    elif alternative not in ['two-sided', 'less', 'greater']:
+    check_string(alternative, 'alternative')
+    if alternative not in ['two-sided', 'less', 'greater']:
         raise TypeError("Value for parameter 'alternative' must be either 'two-sided', 'less' or 'greater'.")
 
-    if type(mode) is not str:
-        raise TypeError("Value for 'mode' must be a string.")
-    elif mode not in ['approx', 'asymp']:
+    check_string(mode, 'mode')
+    if mode not in ['approx', 'asymp']:
         raise TypeError("Value for parameter 'mode' must be either 'approx' or 'asymp'.")
 
-    if type(verbose) is not bool:
-        raise TypeError("Value for 'verbose' must be boolean (True or False).")
+    check_boolean(verbose, 'verbose')
 
     # Test alternative hypothesis
-    alternative_hypothesis = st.kstest(input_array, 'norm', alternative=alternative, mode=mode)
+    alternative_hypothesis = st.kstest(data, 'norm', alternative=alternative, mode=mode)
 
     # Compare the p-value with the given alpha and return the respective result
     if alternative_hypothesis.pvalue < alpha:
@@ -59,11 +61,11 @@ def is_not_normally_distributed(input_array, alpha=0.05, alternative='two-sided'
         raise IOError("Did not get a p-value for the Kolmogorov-Smirnov-Test.")
 
 
-def plot_best_n_fitting(input_array, fitted_distributions, best_n, x_label, title='default', y_label='Frequency', legend=True):
+def plot_best_n_fitting(data, fitted_distributions, best_n, x_label, title='default', y_label='Frequency', legend=True):
     """
     Plot a histogram of the input as well as the probability distribution function of the n best matching distributions.
 
-    :param input_array:                 1-dimensional numpy array or pandas DataFrame with shape (m, 1).
+    :param data:                        1-dimensional numpy array or pandas DataFrame with shape (m, 1).
     :param fitted_distributions:        Dictionary or list of dictionaries. Contains the result from the fitted distributions.
     :param best_n:                      Integer. Defines the number of distributions to add to the plot.
     :param x_label:                     String. Label for the x-axis.
@@ -76,11 +78,10 @@ def plot_best_n_fitting(input_array, fitted_distributions, best_n, x_label, titl
     """
 
     # Check if inputs are valid
-    _check_numpy_array_pandas_dataframe_series_1d(input_array)
+    check_numpy_array_pandas_dataframe_series_1d(data, 'data')
 
-    if type(best_n) is not int:
-        raise TypeError("Value for 'best_n' is of type {0}, but must be of type integer.".format(type(best_n)))
-    elif best_n <= 0:
+    check_integer(best_n, 'best_n')
+    if best_n <= 0:
         raise TypeError("Value for 'best_n' is zero or smaller. Please use a value of at least 1.")
 
     if type(fitted_distributions) != list:
@@ -96,15 +97,13 @@ def plot_best_n_fitting(input_array, fitted_distributions, best_n, x_label, titl
         if 'parameters' not in fitted_distributions[index].keys():
             raise TypeError("At least one dict inside 'fitted_distribution does not contain the key 'parameters'.")
 
-    if type(x_label) is not str:
-        raise TypeError("Value for x_label must be of type string.")
-    if type(y_label) is not str:
-        raise TypeError("Value for y_label must be of type string.")
-    if type(title) is not str:
-        raise TypeError("Value for title must be of type string.")
+    check_string(x_label, 'x_label')
 
-    if type(legend) is not bool:
-        raise TypeError("Value for 'legend' must be of type boolean (True or False).")
+    check_string(y_label, 'y_label')
+
+    check_string(title, 'title')
+
+    check_boolean(legend, 'legend')
 
     # Set default title
     if title == 'default':
@@ -112,7 +111,7 @@ def plot_best_n_fitting(input_array, fitted_distributions, best_n, x_label, titl
 
     # Create main plot
     plt.figure(figsize=(12, 8))
-    ax = input_array.plot(kind='hist', bins=50, normed=True, alpha=0.5, label='Data', legend=legend)
+    ax = data.plot(kind='hist', bins=50, normed=True, alpha=0.5, label='Data', legend=legend)
     y_lim = (ax.get_ylim()[0], ax.get_ylim()[1] * 1.2)
     x_lim = ax.get_xlim()
 
@@ -137,12 +136,12 @@ def plot_best_n_fitting(input_array, fitted_distributions, best_n, x_label, titl
     ax.set_ylabel(ylabel=y_label)
 
 
-def best_fitting_distribution(input_array, best_n=5, n_bins=200, verbose=False):
+def best_fitting_distribution(data, best_n=5, n_bins=200, verbose=False):
     """
-    Go over all defined distributions and fit them to the data in the input array. Sort them by their SSE and return
-    a list of dictionaries containing all fitted distribution parameters sorted by SSE in ascending order.
+    Go over all defined distributions and fit them to the data. Sort them by their SSE and return a list of
+    dictionaries containing all fitted distribution parameters sorted by SSE in ascending order.
 
-    :param input_array:         1-dimensional numpy array or pandas DataFrame of shape (m, 1)
+    :param data:                1-dimensional numpy array or pandas DataFrame of shape (m, 1)
     :param best_n               Integer. Number of best distributions to return.
     :param n_bins:              Integer. Number of bins for histogram.
     :param verbose:             True or False. True for verbose output
@@ -154,8 +153,11 @@ def best_fitting_distribution(input_array, best_n=5, n_bins=200, verbose=False):
 
     """
     # Check if input is valid
-    if type(best_n) is not int:
-        raise TypeError("Value for 'best_n' must be of type integer.")
+    check_integer(best_n, 'best_n')
+
+    check_integer(n_bins, 'n_bins')
+
+    check_boolean(verbose, 'verbose')
 
     # Results list
     results = []
@@ -164,7 +166,7 @@ def best_fitting_distribution(input_array, best_n=5, n_bins=200, verbose=False):
     for distribution in _get_distributions():
 
         # Get fitting results for distribution
-        distribution_fit = fit_distribution_to_data(input_array, distribution, n_bins=n_bins, verbose=verbose)
+        distribution_fit = fit_distribution_to_data(data, distribution, n_bins=n_bins, verbose=verbose)
 
         # Write results to results-list
         if distribution_fit is not None:
@@ -178,12 +180,12 @@ def best_fitting_distribution(input_array, best_n=5, n_bins=200, verbose=False):
     return results
 
 
-def fit_distribution_to_data(input_array, distribution, n_bins=200, verbose=False):
+def fit_distribution_to_data(data, distribution, n_bins=200, verbose=False):
     """
-    Try to fit the given distribution to the input array and get the respective parameters. Additionally, calculate
+    Try to fit the given distribution to the data and get the respective parameters. Additionally, calculate
     the SSE. Return everything as dict.
 
-    :param input_array:         1-dimensional numpy array or pandas DataFrame of shape (m, 1)
+    :param data:                1-dimensional numpy array or pandas DataFrame of shape (m, 1)
     :param distribution:        Distribution from scipy.stats (e.g. scipy.stats.norm)
     :param n_bins:              Interger. Number of bins for histogram.
     :param verbose:             True or False. True for verbose output.
@@ -197,23 +199,21 @@ def fit_distribution_to_data(input_array, distribution, n_bins=200, verbose=Fals
     """
 
     # Check if inputs are valid
-    _check_numpy_array_pandas_dataframe_series_1d(input_array)
+    check_numpy_array_pandas_dataframe_series_1d(data, 'data')
 
     if distribution not in _get_distributions():
         raise TypeError("Distribution must be a scipy.stats distribution and defined in _get_distributions().")
 
-    if type(n_bins) is not int:
-        raise TypeError("Value for 'n_bins' must be of type integer.")
-    elif n_bins < 20:
+    check_integer(n_bins, 'n_bins')
+    if n_bins < 20:
         raise TypeError("Value for 'n_bins' must be at least 20 (200 would be better).")
-    elif n_bins > input_array.size:
-        raise TypeError("Value for 'n_bins' cannot be higher than the number of observations in the input array.")
+    elif n_bins > data.size:
+        raise TypeError("Value for 'n_bins' cannot be higher than the number of observations in the data.")
 
-    if type(verbose) is not bool:
-        raise TypeError("Value for 'verbose' must be of type boolean (True or False).")
+    check_boolean(verbose, 'verbose')
 
-    # Get histogram and bin_edges of input array
-    histogram, bin_edges = np.histogram(input_array, bins=n_bins, density=True)
+    # Get histogram and bin_edges of data
+    histogram, bin_edges = np.histogram(data, bins=n_bins, density=True)
     bin_edges = (bin_edges + np.roll(bin_edges, -1))[:-1] / 2.0
 
     # Try to fit the distribution
@@ -223,7 +223,7 @@ def fit_distribution_to_data(input_array, distribution, n_bins=200, verbose=Fals
             warnings.filterwarnings('ignore')
 
             # Fit distribution to data
-            parameters = distribution.fit(input_array)
+            parameters = distribution.fit(data)
 
             # Get parameters from the fitted distribution
             arg = parameters[:-2]

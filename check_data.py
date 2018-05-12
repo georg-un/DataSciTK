@@ -1,16 +1,19 @@
 import numpy as np
 import pandas as pd
-from _helper import _check_numpy_array_1d
-from type_ops import *
+from _input_checks import check_numpy_array_1d
+from type_ops import contains_types
+from type_ops import is_type_homogeneous
+from category_ops import contains_category
+from nan_ops import contains_nan
 
 
-def is_within_range(input_array, lower_bound, upper_bound, verbose=True):
+def is_within_range(data, lower_bound, upper_bound, verbose=True):
     """
-    Check whether the values contained in the input array are within the specified range
+    Check whether the values contained in the data are within the specified range
 
-    :param input_array:     1-dimensional numpy array
-    :param lower_bound:     number in the same type as the values in the input_array
-    :param upper_bound:     number in the same type as the values in the input_array
+    :param data:            1-dimensional numpy array
+    :param lower_bound:     number in the same type as the values in 'data'
+    :param upper_bound:     number in the same type as the values in 'data'
     :param verbose:         True or False. Prints verbose output if set to True.
 
     :return:                True or False
@@ -18,36 +21,36 @@ def is_within_range(input_array, lower_bound, upper_bound, verbose=True):
     """
 
     # Check if inputs are valid
-    _check_numpy_array_1d(input_array)
+    check_numpy_array_1d(data, 'data')
 
-    if not isinstance(input_array[0], type(lower_bound)):
-        raise TypeError('Type of lower bound ({0}) must match type of the input array values ({1}).'.format(
+    if not isinstance(data[0], type(lower_bound)):
+        raise TypeError("Type of lower bound ({0}) must match type of the values of 'data' ({1}).".format(
             type(lower_bound),
-            type(input_array[0])))
+            type(data[0])))
 
-    if not isinstance(input_array[0], type(upper_bound)):
-        raise TypeError('Type of upper bound ({0}) must match type of the input array values ({1}).'.format(
+    if not isinstance(data[0], type(upper_bound)):
+        raise TypeError("Type of upper bound ({0}) must match type of the values of 'data' ({1}).".format(
             type(upper_bound),
-            type(input_array[0])))
+            type(data[0])))
 
     # Check if values are within range
     within_range = True  # True by default
 
-    if input_array[~np.isnan(input_array)].max() > upper_bound:
+    if data[~np.isnan(data)].max() > upper_bound:
         if verbose:
-            print('Input array contains values larger than the upper bound.')
+            print("Argument for 'data' contains values larger than the upper bound.")
         within_range = False
-    if input_array[~np.isnan(input_array)].min() < lower_bound:
+    if data[~np.isnan(data)].min() < lower_bound:
         if verbose:
-            print('Input array contains values smaller than the lower bound.')
+            print("Argument for 'data' contains values smaller than the lower bound.")
         within_range = False
 
     return within_range
 
 
-def fulfills_assumptions(input_array, verbosity, **assumptions):
+def fulfills_assumptions(data, verbosity, **assumptions):
     """
-    Check the input array for a variable number of assumptions. Return true if all assumptions are fulfilled.
+    Check the data for a variable number of assumptions. Return true if all assumptions are fulfilled.
 
 
     Sample call:
@@ -60,7 +63,7 @@ def fulfills_assumptions(input_array, verbosity, **assumptions):
     fulfills_assumptions(my_array, verbosity='high', **{'contains_nan':True, 'contains_types':['int', 'str']})
 
 
-    :param input_array:     1-dimensional numpy array
+    :param data:            1-dimensional numpy array
     :param verbosity:       'none', 'low' or 'high'. Sets the verbosity level.
     :param assumptions:     dictionary. Must contain at least one of the following keys:
 
@@ -79,8 +82,8 @@ def fulfills_assumptions(input_array, verbosity, **assumptions):
     __allowed_variable_types = ['categorical', 'metric']
     __allowed_verbosity = ['none', 'low', 'high']
 
-    # Check if input array is valid
-    _check_numpy_array_1d(input_array)
+    # Check if data is valid
+    check_numpy_array_1d(data, 'data')
 
     # Check for illegal parameters
     for key in assumptions.keys():
@@ -121,34 +124,34 @@ def fulfills_assumptions(input_array, verbosity, **assumptions):
 
     # Check if array contains specified types
     if 'contains_types' in assumptions.keys():
-        results['contains_types'] = contains_types(input_array, assumptions['contains_types'],
+        results['contains_types'] = contains_types(data, assumptions['contains_types'],
                                                    exclusively=True, verbose=(verbosity == 'high'))
 
     # Check if array is type homogeneous
     if 'type_homogeneous' in assumptions.keys():
         if assumptions['type_homogeneous']:
-            results['type_homogeneous'] = (is_type_homogeneous(input_array, verbose=(verbosity == 'high')) == assumptions['type_homogeneous'])
+            results['type_homogeneous'] = (is_type_homogeneous(data, verbose=(verbosity == 'high')) == assumptions['type_homogeneous'])
         else:
-            results['not_type_homogeneous'] = (is_type_homogeneous(input_array, verbose=(verbosity == 'high')) == assumptions['type_homogeneous'])
+            results['not_type_homogeneous'] = (is_type_homogeneous(data, verbose=(verbosity == 'high')) == assumptions['type_homogeneous'])
 
     # Check if array contains NaN values
     if 'contains_nan' in assumptions.keys():
         if assumptions['contains_nan']:
-            results['contains_nan'] = (contains_nan(input_array) == assumptions['contains_nan'])
+            results['contains_nan'] = (contains_nan(data) == assumptions['contains_nan'])
         else:
-            results['contains_no_nan'] = (contains_nan(input_array) == assumptions['contains_nan'])
+            results['contains_no_nan'] = (contains_nan(data) == assumptions['contains_nan'])
 
     # Check if restrictions hold
     if 'restrictions' in assumptions.keys():
 
         # Check if variable is categorical or boolean
         if assumptions['variable_type'] == 'categorical':
-            results['restrictions'] = contains_category(input_array, assumptions['restrictions'],
+            results['restrictions'] = contains_category(data, assumptions['restrictions'],
                                                         exclusively=True, verbose=(verbosity == 'high'))
 
         # Check if variable is metric
         elif assumptions['variable_type'] == 'metric':
-            results['restrictions'] = is_within_range(input_array,
+            results['restrictions'] = is_within_range(data,
                                                       lower_bound=min(assumptions['restrictions']),
                                                       upper_bound=max(assumptions['restrictions']),
                                                       verbose=(verbosity == 'high'))

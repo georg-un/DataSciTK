@@ -1,12 +1,17 @@
 import numpy as np
-from _helper import _check_numpy_array_pandas_series_1d
-from _helper import type_as_string
+
+from _input_checks import check_numpy_array_pandas_series_1d
+from _input_checks import check_boolean
+from _input_checks import check_list_of_strings
+
+from utils import type_as_string
 
 
-def get_contained_types(input_array, unique=True, as_string=True):
+def get_contained_types(data, unique=True, as_string=True):
     """
     Gets all types in the input array
-    :param input_array:     1-dimensional numpy array or pandas Series
+
+    :param data:            1-dimensional numpy array or pandas Series
     :param unique:          True or False. If true types are returned uniquely as strings.
     :param as_string:       True or False. Types are either returned as string or as type.
 
@@ -15,22 +20,20 @@ def get_contained_types(input_array, unique=True, as_string=True):
     """
 
     # Check if inputs are valid
-    _check_numpy_array_pandas_series_1d(input_array)
+    check_numpy_array_pandas_series_1d(data, 'data')
 
-    if type(unique) is not bool:
-        raise TypeError("Parameter 'unique' must be boolean (True or False).")
+    check_boolean(unique, 'unique')
 
-    if type(as_string) is not bool:
-        raise TypeError("Parameter 'as_string' must be boolean (True or False).")
+    check_boolean(as_string, 'as_string')
 
     if unique and not as_string:
         raise TypeError("Parameter 'as_string' cannot be False as long as parameter 'unique' is True.")
 
     # Create a list with all the types in the input array
     if as_string:
-        types_found = [str(type(element))[8:-2] for element in input_array]
+        types_found = [str(type(element))[8:-2] for element in data]
     else:
-        types_found = [type(element) for element in input_array]
+        types_found = [type(element) for element in data]
 
     if unique:
         types_found = np.unique(types_found)
@@ -38,12 +41,12 @@ def get_contained_types(input_array, unique=True, as_string=True):
     return types_found
 
 
-def contains_types(input_array, types, exclusively=False, verbose=True):
+def contains_types(data, types, exclusively=False, verbose=True):
     """
     Check if the input array contains certain types. If exclusively is set to True, check if the input array
     contains ONLY the specified types.
 
-    :param input_array:         1-dimensional numpy array or pandas Series
+    :param data:                1-dimensional numpy array or pandas Series
     :param types:               string or list of strings. Specifies the types (e.g. ['str', 'int']
     :param exclusively:         True or False. If set to True, check if ONLY the specified types are present
     :param verbose:             True or False. Set to true for verbose output.
@@ -57,17 +60,16 @@ def contains_types(input_array, types, exclusively=False, verbose=True):
         types = [types]
 
     # Check if inputs are valid
-    if any([type(element) is not str for element in types]):
-        raise TypeError("Parameter 'types' contains non-string values. Please use a string or a list of strings.")
+    check_numpy_array_pandas_series_1d(data, 'data')
 
-    if type(exclusively) is not bool:
-        raise TypeError("Parameter 'exclusively' must be boolean (True or False).")
+    check_list_of_strings(types, 'types')
 
-    if type(verbose) is not bool:
-        raise TypeError("Parameter 'verbose' must be boolean (True or False).")
+    check_boolean(exclusively, 'exclusively')
+
+    check_boolean(verbose, 'verbose')
 
     # Get types in input array
-    contained_types = get_contained_types(input_array, unique=True, as_string=True)
+    contained_types = get_contained_types(data, unique=True, as_string=True)
 
     # Check if all types can be found
     types_found = [element in contained_types for element in types]
@@ -104,11 +106,10 @@ def is_type_homogeneous(input_array, verbose=True):
     :return:                True or False. True if all values have the same type.
 
     """
-    _check_numpy_array_pandas_series_1d(input_array)
+    check_numpy_array_pandas_series_1d(input_array, 'input_array')
 
     # Check if input is valid
-    if type(verbose) is not bool:
-        raise TypeError("Parameter 'verbose' must be boolean (True or False).")
+    check_boolean(verbose, 'verbose')
 
     # Get types in input array
     types_found = get_contained_types(input_array, unique=True, as_string=True)
@@ -139,7 +140,7 @@ def match_by_type(input_array, match_types):
     """
 
     # Check if inputs are valid
-    _check_numpy_array_pandas_series_1d(input_array)
+    check_numpy_array_pandas_series_1d(input_array, 'input_array')
 
     if type(match_types) is not list:
         match_types = [match_types]

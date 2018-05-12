@@ -4,13 +4,13 @@ import pandas as pd
 from itertools import combinations
 import warnings
 
-from _helper import _check_pandas_dataframe_1d
-from _helper import _check_pandas_dataframe_nd
-from _helper import _check_string
-from _helper import _check_list_of_strings
-from _helper import _check_integer
-from _helper import _check_boolean
-from _helper import _check_float
+from _input_checks import check_pandas_dataframe_1d
+from _input_checks import check_pandas_dataframe_nd
+from _input_checks import check_string
+from _input_checks import check_list_of_strings
+from _input_checks import check_integer
+from _input_checks import check_boolean
+from _input_checks import check_float
 
 from utils import contains_negatives_or_zero
 
@@ -46,9 +46,9 @@ def brute_force_logit(y, X, variables, benchmark_criterion, keep_best_n=5, max_e
     """
 
     # Check if inputs are valid
-    _check_pandas_dataframe_1d(y, 'y')
+    check_pandas_dataframe_1d(y, 'y')
 
-    _check_pandas_dataframe_nd(X)
+    check_pandas_dataframe_nd(X, 'X')
 
     if len(X) != len(y):
         raise TypeError("Inputs for 'X' and 'y' have a different number of observations. ({0}, {1})".format(
@@ -56,35 +56,35 @@ def brute_force_logit(y, X, variables, benchmark_criterion, keep_best_n=5, max_e
             len(y)
         ))
 
-    _check_list_of_strings(variables, 'variables')
+    check_list_of_strings(variables, 'variables')
 
-    _check_string(benchmark_criterion, 'benchmark_criterion')
+    check_string(benchmark_criterion, 'benchmark_criterion')
     if benchmark_criterion != 'aic' and benchmark_criterion != 'bic':
         raise TypeError("Argument for 'benchmark_criterion' must be either 'aic' or 'bic'.")
 
-    _check_integer(keep_best_n, 'keep_best_n')
+    check_integer(keep_best_n, 'keep_best_n')
     if keep_best_n < 1:
         raise TypeError("Argument for 'keep_best_n' is smaller than 1. Please use a value of 1 or larger.")
 
-    _check_integer(max_exponent, 'max_exponent')
+    check_integer(max_exponent, 'max_exponent')
     if max_exponent < 1:
         raise TypeError("Argument for 'max_exponent' must not be smaller than 1.")
 
-    _check_integer(max_root, 'max_root')
+    check_integer(max_root, 'max_root')
     if max_root < 1:
         raise TypeError("Argument for 'max_root' must not be smaller than 1.")
 
-    _check_boolean(include_log, 'include_log')
+    check_boolean(include_log, 'include_log')
 
-    _check_boolean(include_interactions, 'include_interactions')
+    check_boolean(include_interactions, 'include_interactions')
 
-    _check_float(alpha, 'alpha')
+    check_float(alpha, 'alpha')
     if alpha <= 0 or alpha >= 1:
         raise TypeError("Value for 'alpha' must be between 0 and 1.")
 
-    _check_boolean(optimization, 'optimization')
+    check_boolean(optimization, 'optimization')
 
-    _check_boolean(verbose, 'verbose')
+    check_boolean(verbose, 'verbose')
 
     # Concatenate X and y into one data frame
     data_frame = pd.concat([y, X], axis=1)
@@ -159,38 +159,38 @@ def _get_model_specifications(data, regression_type, y_name, variables, max_expo
     ]
 
     # Check if inputs are valid
-    _check_pandas_dataframe_nd(data)
+    check_pandas_dataframe_nd(data, 'data')
 
-    _check_string(regression_type, 'regression_type')
+    check_string(regression_type, 'regression_type')
     if regression_type not in REGRESSION_TYPES:
         raise TypeError("Argument for parameter 'regression_type' ({0}) is not a valid regression type.".format(
             regression_type
         ))
 
-    _check_string(y_name, 'y_name')
+    check_string(y_name, 'y_name')
 
-    _check_list_of_strings(variables, 'variables')
+    check_list_of_strings(variables, 'variables')
 
-    _check_integer(max_exponent, 'max_exponent')
+    check_integer(max_exponent, 'max_exponent')
     if max_exponent < 1:
         raise TypeError("Argument for parameter 'max_exponend' must be 1 or larger.")
 
-    _check_integer(max_root, 'max_root')
+    check_integer(max_root, 'max_root')
     if max_root < 1:
         raise TypeError("Argument for parameter 'max_root' must be 1 or larger.")
 
-    _check_boolean(include_log, 'include_log')
+    check_boolean(include_log, 'include_log')
 
-    _check_boolean(include_interactions, 'include_interactions')
+    check_boolean(include_interactions, 'include_interactions')
 
-    _check_float(alpha, 'alpha')
+    check_float(alpha, 'alpha')
     if alpha <= 0 or alpha >= 1:
         raise TypeError("Argument for parameter 'alpha' must be a value between 0 and 1.")
 
-    _check_boolean(optimization, 'optimization')
+    check_boolean(optimization, 'optimization')
 
     if columns_larger_zero is not None:
-        _check_list_of_strings(columns_larger_zero, 'columns_larger_zero')
+        check_list_of_strings(columns_larger_zero, 'columns_larger_zero')
     if (include_log or max_root > 1) and (columns_larger_zero is None or np.size(columns_larger_zero) == 0):
         print("Argument for parameter 'columns_larger_zero' contains no columns. Logarithm and roots will not be included.")
 
@@ -299,17 +299,17 @@ def is_relevant_variable(data, target_name, variable_name, regression_type, alph
     ]
 
     # Check if inputs are valid
-    _check_pandas_dataframe_nd(data)
+    check_pandas_dataframe_nd(data, 'data')
 
-    _check_string(target_name, 'target_name')
+    check_string(target_name, 'target_name')
 
-    _check_string(variable_name, 'variable_name')
+    check_string(variable_name, 'variable_name')
 
-    _check_string(regression_type, 'regression_type')
+    check_string(regression_type, 'regression_type')
     if regression_type not in REGRESSION_TYPES:
         raise TypeError("'{0}' is not available as regression-type.".format(regression_type))
 
-    _check_float(alpha, 'alpha')
+    check_float(alpha, 'alpha')
     if alpha <= 0.0 or alpha >= 1.0:
         raise TypeError("Value for 'alpha' must be between 0 and 1.")
 
@@ -384,13 +384,13 @@ def _get_best_n_regressions(regressions, n, criterion):
         if 'fitted' not in regressions[regression].keys():
             raise TypeError("At least one dict for the input of the parameter 'regressions' does not contain the key 'fitted'.")
 
-    _check_integer(n, 'n')
+    check_integer(n, 'n')
     if n <= 0:
         raise TypeError("Value for parameter 'n' ({0}) is smaller than 1. Please use a value of 1 or larger.".format(
             n
         ))
 
-    _check_string(criterion, 'criterion')
+    check_string(criterion, 'criterion')
     if criterion != 'aic' and criterion != 'bic':
         raise TypeError("Argument for parameter 'criterion' ({0}) does not define a valid criterion. Please use 'aic' or 'bic' as criterion.".format(
             criterion

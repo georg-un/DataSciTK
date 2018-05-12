@@ -1,59 +1,59 @@
 import numpy as np
 import pandas as pd
 
-from _helper import _check_numpy_array_1d
-import check_data as cd
+from _input_checks import check_numpy_array_1d
 from utils import match_by_pattern
 from type_ops import contains_types
 from type_ops import match_by_type
 from type_ops import get_contained_types
+from type_ops import is_type_homogeneous
 
 
-def count_nan(input_array):
+def count_nan(data):
     """
-    Count number of NaN's in the input array. Works also for an array of strings.
+    Count number of NaN's in the data. Works also for an array of strings.
 
-    :param input_array:         1-dimensional numpy array
+    :param data:                1-dimensional numpy array
     :return:                    Integer. Number of NaN's found.
 
     """
 
     # Check if input is valid
-    _check_numpy_array_1d(input_array)
+    check_numpy_array_1d(data, 'data')
 
     nans = 0
 
     # Check string values for NaN's
-    if contains_types(input_array, 'str', exclusively=False, verbose=False):
-        string_values = input_array[match_by_type(input_array, 'str')]
+    if contains_types(data, 'str', exclusively=False, verbose=False):
+        string_values = data[match_by_type(data, 'str')]
         string_values = string_values[match_by_pattern(string_values, ['nan', 'NaN', 'NAN', 'N/A'])]
         nans += string_values.size
 
     # Check non-string values for NaN's
-    if not contains_types(input_array, 'str', exclusively=True, verbose=False):
-        non_string_values = input_array[[type(element) is not str for element in input_array]]
+    if not contains_types(data, 'str', exclusively=True, verbose=False):
+        non_string_values = data[[type(element) is not str for element in data]]
         try:
             nans += np.sum(pd.isnull(non_string_values))
         except TypeError:
-            types = get_contained_types(input_array, unique=True, as_string=True)
-            raise TypeError("input array contains types which cannot be checked for NaN. Found types are: {0}.".format(
+            types = get_contained_types(data, unique=True, as_string=True)
+            raise TypeError("Argument for 'data' contains types which cannot be checked for NaN. Found types are: {0}.".format(
                 types
             ))
 
     return nans
 
 
-def contains_nan(input_array):
+def contains_nan(data):
     """
-    Check if array contains NaN values. Works for arrays of strings as well.
+    Check if data contains NaN values. Works for arrays of strings as well.
 
-    :param input_array:     1-dimensional numpy array
+    :param data:            1-dimensional numpy array
     :return:                True or False
 
     """
 
     # Get number of NaN's
-    nans = count_nan(input_array)
+    nans = count_nan(data)
 
     # Return True if NaN's have been found
     if nans is None:
@@ -66,31 +66,31 @@ def contains_nan(input_array):
         raise IOError("Number of NaN's was not zero or larger: {0}".format(nans))
 
 
-def recode_nan_binary(input_array):
+def recode_nan_binary(data):
     """
-    Replaces the NaN's in the input array by a 1 and all other values by a 0.
+    Replaces the NaN's in the data by a 1 and all other values by a 0.
 
-    :param input_array:     1-dimensional numpy array
+    :param data:            1-dimensional numpy array
     :return:                1-dimensional numpy array with a 1 for every NaN and a 0 for every other value
 
     """
 
     # Check if input is valid
-    _check_numpy_array_1d(input_array)
+    check_numpy_array_1d(data, 'data')
 
-    if not cd.is_type_homogeneous(input_array, verbose=False):
-        raise TypeError("Input array contains multiple types ({0}). Please use only type homogeneous types.".format(
-            cd.get_contained_types(input_array, unique=True, as_string=True)
+    if not is_type_homogeneous(data, verbose=False):
+        raise TypeError("Argument for 'data' contains multiple types ({0}). Please use only type homogeneous types.".format(
+            get_contained_types(data, unique=True, as_string=True)
         ))
 
-    if not contains_nan(input_array):
-        raise TypeError("Input array does not contain any NaN. All result values would be zero.")
+    if not contains_nan(data):
+        raise TypeError("Argument for 'data' does not contain any NaN. All result values would be zero.")
 
     # Find NaN's
-    if isinstance(input_array[0], str):
-        binary_array = match_by_pattern(input_array, ['nan', 'NaN', 'NAN', 'N/A'])
+    if isinstance(data[0], str):
+        binary_array = match_by_pattern(data, ['nan', 'NaN', 'NAN', 'N/A'])
     else:
-        binary_array = [np.isnan(value) for value in input_array]
+        binary_array = [np.isnan(value) for value in data]
 
     # convert from True and False to 1 and 0
     binary_array = np.asarray([int(value) for value in binary_array])

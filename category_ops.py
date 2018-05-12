@@ -1,17 +1,19 @@
 import numpy as np
 import pandas as pd
 
-from _helper import _check_numpy_array_1d
-from _helper import _check_numpy_array_pandas_series_1d
+from _input_checks import check_numpy_array_1d
+from _input_checks import check_numpy_array_pandas_series_1d
+from _input_checks import check_boolean
+
 from type_ops import is_type_homogeneous
 from type_ops import get_contained_types
 
 
-def recode_binary_by_categories(input_array, to_0, to_1, verbose=False):
+def recode_binary_by_categories(data, to_0, to_1, verbose=False):
     """
     Recode a numpy array or pandas Series to 0 and 1 according to two lists of categories.
 
-    :param input_array:         1-dimensional numpy array or pandas Series
+    :param data:                1-dimensional numpy array or pandas Series
     :param to_0:                Single value or list of values. Categories which should be coded to 0.
     :param to_1:                Single value or list of values. Categories which should be coded to 1.
     :param verbose:             True or False. If true a warning is printed, if some category is not found in data.
@@ -20,6 +22,11 @@ def recode_binary_by_categories(input_array, to_0, to_1, verbose=False):
 
     """
 
+    # Check if inputs are valid
+    check_numpy_array_pandas_series_1d(data, 'data')
+
+    check_boolean(verbose, 'verbose')
+
     # Convert to_0 and to_1 to list if it is already one
     if type(to_0) is not list:
         to_0 = [to_0]
@@ -27,12 +34,12 @@ def recode_binary_by_categories(input_array, to_0, to_1, verbose=False):
         to_1 = [to_1]
 
     # Get contained categories
-    contained_categories = get_contained_categories(input_array)
+    contained_categories = get_contained_categories(data)
 
     # Check if all categories are defined in to_0 and to_1
     for category in contained_categories:
         if category not in to_0 and category not in to_1:
-            raise TypeError("Data contains the category '{0}' which is neither defined in to_0 or to_1.".format(
+            raise TypeError("Argument for 'data' contains the category '{0}' which is neither defined in to_0 or to_1.".format(
                 category
             ))
 
@@ -53,10 +60,10 @@ def recode_binary_by_categories(input_array, to_0, to_1, verbose=False):
                 print("Info: Category '{0}' from to_1 has not been found in data.".format(category))
 
     # Copy data to binary array
-    binary_array = input_array.copy()
+    binary_array = data.copy()
 
     # Loop over array and recode to 0 and 1
-    for index, value in enumerate(input_array):
+    for index, value in enumerate(data):
         if value in to_0:
             binary_array[index] = 0
         elif value in to_1:
@@ -67,31 +74,31 @@ def recode_binary_by_categories(input_array, to_0, to_1, verbose=False):
     return binary_array
 
 
-def get_contained_categories(input_array):
+def get_contained_categories(data):
     """
     Get an array of all contained categories in a numpy array or pandas Series.
 
-    :param input_array:         1-dimensional numpy array or pandas Series
+    :param data:                1-dimensional numpy array or pandas Series
     :return:                    1-dimensional numpy array containing all unique categories of the input
 
     """
 
     # Check if input is valid
-    _check_numpy_array_pandas_series_1d(input_array)
+    check_numpy_array_pandas_series_1d(data, 'data')
 
     # Get all unique values (= categories) and return them
-    categories = pd.unique(input_array)
+    categories = pd.unique(data)
     return categories
 
 
-def contains_category(input_array, categories, exclusively=False, verbose=True):
+def contains_category(data, categories, exclusively=False, verbose=True):
     """
-    Check if all specified categories are present in the input array. If exclusively is set to True (default), check
-    if ONLY the specified categories are present in the input array and return False if additional categories are found.
+    Check if all specified categories are present in the data. If exclusively is set to True (default), check
+    if ONLY the specified categories are present in the data and return False if additional categories are found.
 
-    :param input_array:     1-dimensional numpy array.
-    :param categories:      Single value or list. Must be of the same type as the values in the input array.
-    :param exclusively:     True or False. Checks if the input array contains exclusively the specified categories.
+    :param data:            1-dimensional numpy array.
+    :param categories:      Single value or list. Must be of the same type as the values in the data.
+    :param exclusively:     True or False. Checks if the data contains exclusively the specified categories.
     :param verbose:         True or False. Prints additional information to console if True.
 
     :return:                True or False.
@@ -103,26 +110,25 @@ def contains_category(input_array, categories, exclusively=False, verbose=True):
         categories = [categories]
 
     # Check if inputs are valid
-    _check_numpy_array_1d(input_array)
+    check_numpy_array_1d(data, 'data')
 
     for category in categories:
-        if not isinstance(input_array[0], type(category)):
-            raise TypeError("Type of category '{0}' ({1}) must match type of the input array values ({2}).".format(
+        if not isinstance(data[0], type(category)):
+            raise TypeError("Type of category '{0}' ({1}) must match type of the values for 'data' ({2}).".format(
                 category,
                 str(type(category))[8:-2],
-                str(type(input_array[0]))[8:-2]
+                str(type(data[0]))[8:-2]
             ))
 
-    if type(exclusively) is not bool:
-        raise TypeError("Parameter 'exclusively' must be boolean (True or False).")
+    check_boolean(exclusively, 'exclusively')
 
-    if not is_type_homogeneous(input_array, verbose=False):
-        raise TypeError('Input array must be type homogeneous but contains values with different types: {0}.'.format(
-            get_contained_types(input_array, unique=True, as_string=True)
+    if not is_type_homogeneous(data, verbose=False):
+        raise TypeError("Argument for 'data' must be type homogeneous but contains values with different types: {0}.".format(
+            get_contained_types(data, unique=True, as_string=True)
         ))
 
-    # Get all unique categories in the input array
-    input_array_categories = get_contained_categories(input_array)
+    # Get all unique categories in data
+    input_array_categories = get_contained_categories(data)
 
     # Check if all categories can be found
     categories_found = [x in input_array_categories for x in categories]
@@ -149,42 +155,44 @@ def contains_category(input_array, categories, exclusively=False, verbose=True):
     return result
 
 
-def count_elements_with_category(input_array, categories, verbose=False):
+def count_elements_with_category(data, categories, verbose=False):
     """
-    Counts all observations in the input array which match the given category. Returns the sum of it.
+    Counts all observations in 'data' which match the given category. Returns the sum of it.
 
-    :param input_array:     1-dimensional numpy array
-    :param categories:      List or single value. Must match the type of the values in the input array.
+    :param data:     1-dimensional numpy array
+    :param categories:      List or single value. Must match the type of the values in 'data'.
     :param verbose:         True or False. True for verbose output.
 
     :return:                Integer. Number of found occurrences.
 
     """
 
-    _check_numpy_array_1d(input_array)
+    check_numpy_array_1d(data, 'data')
+
+    check_boolean(verbose, 'verbose')
 
     # Convert category to a list, if it is not already one
     if type(categories) is not list:
         categories = [categories]
 
     # Check for type homogeneity
-    if not is_type_homogeneous(input_array, verbose=False):
-        raise TypeError("Input array contains values with different types {0}. Please use only type homogeneous arrays.".format(
-            get_contained_types(input_array, unique=True, as_string=True)
+    if not is_type_homogeneous(data, verbose=False):
+        raise TypeError("Argument for 'data' contains values with different types {0}. Please use only type homogeneous arrays.".format(
+            get_contained_types(data, unique=True, as_string=True)
         ))
 
-    # Check if types of input array and category-argument match
+    # Check if types of data and category-argument match
     for category in categories:
-        if not isinstance(category, type(input_array[0])):
-            raise TypeError("Type of 'category' ({0}) does not match type of values in 'input_array' ({1}).".format(
+        if not isinstance(category, type(data[0])):
+            raise TypeError("Type of 'category' ({0}) does not match type of values in 'data' ({1}).".format(
                 type(category),
-                type(input_array[0])
+                type(data[0])
             ))  # TODO: maybe add automatic conversion in the future
 
     # Find matches for each category, get the sum of occurrences and add the sums of all categories together
     sum_found_observations = 0
     for category in categories:
-        found_observations = np.sum(input_array[input_array == category])
+        found_observations = np.sum(data[data == category])
         if verbose:
             print("Found {0} observations of the category '{1]'.".format(found_observations, category))
         sum_found_observations += found_observations
