@@ -1,3 +1,21 @@
+# Copyright (C) 2018 Georg Unterholzner
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+#
+# ==============================================================================
+""" Distributions module """
+
 import warnings
 import numpy as np
 import pandas as pd
@@ -254,6 +272,9 @@ def fit_distribution_to_data(data, distribution, n_bins=200, verbose=False):
 def _get_distributions():
     """
     :return:    List of scipy.stats distributions
+
+    This is a modification of the code from the great answer from tmthydvnprt on stackoverflow.com:
+    https://stackoverflow.com/questions/6620471/fitting-empirical-distribution-to-theoretical-ones-with-scipy-python#answer-37616966
 
     """
 
