@@ -1,5 +1,5 @@
 from numpy import ndarray
-from numpy import int64, float32, float64
+from numpy import int16, int32, int64, float16, float32, float64
 from pandas import DataFrame
 from pandas import Series
 
@@ -118,15 +118,15 @@ def check_list_of_strings(data, name):
                 ))
 
 
-def check_integer(data, name):
+def check_list_numpy_array(data, name):
     """
-    Check if input is an integer.
+    Check if input is a list.
 
     """
-    if type(data) is not int and type(data) is not int64:
-        raise TypeError("Argument for parameter '{0}' must be of type integer but is currently of type {1}.".format(
+    if type(data) is not list and not isinstance(data, ndarray):
+        raise TypeError("Argument for parameter '{0}' must be of type list but is of type {1}.".format(
             str(name),
-            type(data)
+            str(type(data))
         ))
 
 
@@ -142,14 +142,83 @@ def check_boolean(data, name):
         ))
 
 
+def check_integer(data, name):
+    """
+    Check if input is an integer.
+
+    """
+    if type(data) is not int and type(data) is not int64:
+        raise TypeError("Argument for parameter '{0}' must be of type integer but is currently of type {1}.".format(
+            str(name),
+            type(data)
+        ))
+
+
+def is_integer(data):
+    """
+    Check if input is of type integer.
+
+    """
+    if type(data) is int or type(data) is int16 or type(data) is int32 or type(data) is int64:
+        return True
+    else:
+        return False
+
+
 def check_float(data, name):
     """
     Check if input is of type float.
 
     """
-    if type(data) is not float and type(data) is not float64 and type(data) is not float32:
+    if not is_float(data):
         raise TypeError("Argument for parameter {0} must be of type float but is currently of type {1].".format(
             str(name),
             type(data)
+        ))
+
+
+def is_float(data):
+    """
+    Check if input is of type float.
+
+    """
+    if type(data) is float or type(data) is float16 or type(data) is float32 or type(data) is float64:
+        return True
+    else:
+        return False
+
+
+def is_numeric(data):
+    """
+    Check if input is either of type int or of type float.
+
+    """
+    if is_integer(data) or is_float(data):
+        return True
+    else:
+        return False
+
+
+def check_numeric(data, name):
+    """
+    Check if input is either of type in or of type float.
+
+    """
+    if not is_numeric(data):
+        raise TypeError("Argument of parameter '{0}' must be numeric (integer or floar) but is of type {1}.".format(
+            str(name),
+            str(type(data))
+        ))
+
+
+def check_larger(data, name, min_value):
+    """
+    Check if input is larger than min_value.
+
+    """
+    if data < min_value:
+        raise TypeError("Argument for parameter '{0}' must be {1} or larger.".format(
+            str(name),
+            str(min_value)
         ))
 

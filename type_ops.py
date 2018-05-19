@@ -4,7 +4,7 @@ from _input_checks import check_numpy_array_pandas_series_1d
 from _input_checks import check_boolean
 from _input_checks import check_list_of_strings
 
-from utils import type_as_string
+from _helper import type_as_string
 
 
 def get_contained_types(data, unique=True, as_string=True):
