@@ -3,10 +3,39 @@ import pandas as pd
 
 from _input_checks import check_numpy_array_1d
 from _input_checks import check_numpy_array_pandas_series_1d
+from _input_checks import check_pandas_dataframe_nd
 from _input_checks import check_boolean
+from _input_checks import check_list_numpy_array
+from _input_checks import is_numeric
+from _input_checks import is_float
+from _input_checks import is_integer
 
 from type_ops import is_type_homogeneous
 from type_ops import get_contained_types
+from type_ops import type_as_string
+
+
+def convert_to_binary_columns(data, columns, delete_category_cols=True):
+
+    # TODO checks & description
+
+    result_data = data.copy()
+
+    for column in columns:
+        # Get all contained categories
+        categories = get_contained_categories(np.array(data[[column]]).ravel())
+        for number, category in enumerate(categories):
+            if number != 0:
+                # Recode each single category binary
+                other_categories = categories[categories != category]
+                result_data[str(column) + '_' + str(category)] = recode_binary_by_categories(data=np.array(data[column]).ravel(),
+                                                                                             to_0=other_categories, to_1=[category],
+                                                                                             verbose=False)
+
+    if delete_category_cols:
+        result_data = result_data.drop(columns=columns)
+
+    return result_data
 
 
 def recode_binary_by_categories(data, to_0, to_1, verbose=False):
@@ -14,8 +43,8 @@ def recode_binary_by_categories(data, to_0, to_1, verbose=False):
     Recode a numpy array or pandas Series to 0 and 1 according to two lists of categories.
 
     :param data:                1-dimensional numpy array or pandas Series
-    :param to_0:                Single value or list of values. Categories which should be coded to 0.
-    :param to_1:                Single value or list of values. Categories which should be coded to 1.
+    :param to_0:                List. Categories which should be coded to 0.
+    :param to_1:                List. Categories which should be coded to 1.
     :param verbose:             True or False. If true a warning is printed, if some category is not found in data.
 
     :return:                    1-dimensional numpy array containing only 1 and 0.
@@ -27,11 +56,9 @@ def recode_binary_by_categories(data, to_0, to_1, verbose=False):
 
     check_boolean(verbose, 'verbose')
 
-    # Convert to_0 and to_1 to list if it is already one
-    if type(to_0) is not list:
-        to_0 = [to_0]
-    if type(to_1) is not list:
-        to_1 = [to_1]
+    check_list_numpy_array(to_0, 'to_0')
+
+    check_list_numpy_array(to_1, 'to_1')
 
     # Get contained categories
     contained_categories = get_contained_categories(data)
@@ -110,14 +137,27 @@ def contains_category(data, categories, exclusively=False, verbose=True):
         categories = [categories]
 
     # Check if inputs are valid
-    check_numpy_array_1d(data, 'data')
+    #check_numpy_array_1d(data, 'data')  # TODO: pandas series or df possible as well?
+    check_numpy_array_pandas_series_1d(data, 'data')
 
     for category in categories:
-        if not isinstance(data[0], type(category)):
+        if is_float(data[0]) and not is_float(category):
             raise TypeError("Type of category '{0}' ({1}) must match type of the values for 'data' ({2}).".format(
                 category,
-                str(type(category))[8:-2],
-                str(type(data[0]))[8:-2]
+                type_as_string(category),
+                type_as_string(data[0])
+            ))
+        if is_integer(data[0]) and not is_integer(category):
+            raise TypeError("Type of category '{0}' ({1}) must match type of the values for 'data' ({2}).".format(
+                category,
+                type_as_string(category),
+                type_as_string(data[0])
+            ))
+        elif not is_float(data[0]) and not is_integer(data[0]) and not isinstance(data[0], type(category)):
+            raise TypeError("Type of category '{0}' ({1}) must match type of the values for 'data' ({2}).".format(
+                category,
+                type_as_string(category),
+                type_as_string(data[0])
             ))
 
     check_boolean(exclusively, 'exclusively')
@@ -201,3 +241,31 @@ def count_elements_with_category(data, categories, verbose=False):
         print("Found {0} matching observations in total.".format(sum_found_observations))
 
     return sum_found_observations
+
+
+def is_boolean(data):
+    # TODO: description
+    if not is_numeric(data[0]):
+        return False
+    elif is_integer(data[0]):
+        return contains_category(data, [0, 1], exclusively=True, verbose=False)
+    elif is_float(data[0]):
+        return contains_category(data, [0.0, 0.1], exclusively=True, verbose=False)
+    else:
+        return False
+
+
+def get_boolean_columns(data):
+    # TODO: description
+    # Check if input is valid
+    check_pandas_dataframe_nd(data, 'data')
+
+    # Initialize result list
+    boolean_columns = []
+
+    # Get all columns which are boolean
+    for column in data:
+        if is_boolean(data[column]):
+            boolean_columns.append(column)
+
+    return boolean_columns

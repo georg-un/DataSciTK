@@ -2,6 +2,7 @@ import numpy as np
 
 from _input_checks import check_numpy_array_1d
 from _input_checks import check_numpy_array_pandas_series_1d
+from _input_checks import check_pandas_dataframe_nd
 from type_ops import is_type_homogeneous
 from type_ops import get_contained_types
 
@@ -71,13 +72,17 @@ def contains_negatives_or_zero(data):
         ))
 
 
-def type_as_string(obj):
-    """
-    Takes an object and returns its type as string.
+def get_columns_larger_zero(data):
+    # TODO: description
+    check_pandas_dataframe_nd(data, 'data')
 
-    :param obj:     Any object
-    :return:        Type of the object as a string value.
+    # Initialize result list
+    columns_larger_zero = []
 
-    """
+    for column in data:
+        if not contains_negatives_or_zero(data[column]):
+            columns_larger_zero.append(column)
 
-    return str(type(obj))[8:-2]
+    return columns_larger_zero
+
+
