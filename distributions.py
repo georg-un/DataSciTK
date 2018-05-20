@@ -29,9 +29,6 @@ from _input_checks import check_boolean
 from _input_checks import check_integer
 
 
-# TODO: Add function which predicts the probability of a value given a data sample (plot would be nice)
-
-
 def is_not_normally_distributed(data, alpha=0.05, alternative='two-sided', mode='approx', verbose=False):
     """
     Performs a Kolmogorov-Smirnov-Test for normal distribution. The tested hypothesis is that the data is not
@@ -190,16 +187,19 @@ class DistributionFitter:
         """
         Fit 89 scipy.stats distributions to the data. Return the n best distributions in terms of their SSE.
 
-        :param n:       Integer (larger than 1). Defines the number of distributions to return.
+        :param n:       Integer (at least 1). Defines the number of distributions to return.
 
         :return:        An object of class _Fitted_Distributions which contains n objects of class _Fitted_Distribution.
-                        All contain the respecitve distribution, the fitted distribution parameters, the sum of squared
+                        All contain the respective distribution, the fitted distribution parameters, the sum of squared
                         errors (SSE) of the distribution and the data.
 
         """
 
         # Check if input is valid
         check_integer(n, 'n')
+
+        if n < 1:
+            raise TypeError("Argument for parameter 'n' must be at least 1.")
 
         # Initialize results object
         fitted = _FittedDistributions(data=self.data)
@@ -303,6 +303,42 @@ class _FittedDistribution:
         ax.set_title(title)
         ax.set_xlabel(xlabel=x_label)
         ax.set_ylabel(ylabel=y_label)
+
+    def probability_x_smaller_equal(self, value):
+        """
+        Get the probability of a random sample of the fitted distribution being smaller or equal the given value.
+        Calls the cumulative distribution function (CDF).
+
+        :param value:       Array_like. Defines the values for which the probability will be returned.
+
+        :return:            1-dimensional numpy array. Contains the probability values.
+
+        """
+        return self.distribution.cdf(value, *[self.arg, self.mean, self.standard_deviation])
+
+    def probability_x_larger_equal(self, value):
+        """
+        Get the probability of a random sample of the fitted distribution being larger or equal the given value.
+        Calls the survival function (SF), a.k.a. complemaentary cumulative distribution function.
+
+        :param value:       Array_like. Defines the values for which the probability will be returned.
+
+        :return:            1-dimensional numpy array. Contains the probability values.
+
+        """
+        return self.distribution.sf(value, *[self.arg, self.mean, self.standard_deviation])
+
+    def value_for_probability_x(self, probability):
+        """
+        Get the value which is needed to provide a probability of x.
+        Calls the percent-point function (PPF), a.k.a. quantile function.
+
+        :param probability:     Array_like. Defines the probability for which the value will be returned.
+
+        :return:                1-dimensional numpy array. Contains the respective values.
+
+        """
+        return self.distribution.ppf(probability, *[self.arg, self.mean, self.standard_deviation])
 
 
 class _FittedDistributions:
