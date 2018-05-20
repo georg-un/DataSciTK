@@ -28,6 +28,7 @@ from _input_checks import check_string
 from _input_checks import check_boolean
 from _input_checks import check_integer
 
+
 # TODO: Add function which predicts the probability of a value given a data sample (plot would be nice)
 
 
@@ -79,136 +80,15 @@ def is_not_normally_distributed(data, alpha=0.05, alternative='two-sided', mode=
         raise IOError("Did not get a p-value for the Kolmogorov-Smirnov-Test.")
 
 
-def plot_best_n_fitting(data, fitted_distributions, best_n, x_label, title='default', y_label='Frequency', legend=True):
+class DistributionFitter:
     """
-    Plot a histogram of the input as well as the probability distribution function of the n best matching distributions.
+    Fit theoretical distributions to a 1-dimensional data.
 
-    :param data:                        1-dimensional numpy array or pandas DataFrame with shape (m, 1).
-    :param fitted_distributions:        Dictionary or list of dictionaries. Contains the result from the fitted distributions.
-    :param best_n:                      Integer. Defines the number of distributions to add to the plot.
-    :param x_label:                     String. Label for the x-axis.
-    :param title:                       String. Title of the plot.
-    :param y_label:                     String. Label for the y-axis.
-    :param legend:                      True or False. If true legend is plotted.
+    Use it for a single distribution to plot it's density function or to predict the probability of a specific value:
+    fit(distribution)
 
-    :return:                            None. Creates a plot.
-
-    """
-
-    # Check if inputs are valid
-    check_numpy_array_pandas_dataframe_series_1d(data, 'data')
-
-    check_integer(best_n, 'best_n')
-    if best_n <= 0:
-        raise TypeError("Value for 'best_n' is zero or smaller. Please use a value of at least 1.")
-
-    if type(fitted_distributions) != list:
-        raise TypeError("Input for 'fitted_distributions' must be a list of dictionaries.")
-
-    best_n = min(best_n, len(fitted_distributions))
-
-    for index in range(0, best_n):
-        if type(fitted_distributions[index]) is not dict:
-            raise TypeError("At least one element inside 'fitted_distributions' is not of type dict.")
-        if 'distribution' not in fitted_distributions[index].keys():
-            raise TypeError("At least one dict inside 'fitted_distribution does not contain the key 'distribution'.")
-        if 'parameters' not in fitted_distributions[index].keys():
-            raise TypeError("At least one dict inside 'fitted_distribution does not contain the key 'parameters'.")
-
-    check_string(x_label, 'x_label')
-
-    check_string(y_label, 'y_label')
-
-    check_string(title, 'title')
-
-    check_boolean(legend, 'legend')
-
-    # Set default title
-    if title == 'default':
-        title = "Comparison between the best {0} fitting distributions.".format(best_n)
-
-    # Create main plot
-    plt.figure(figsize=(12, 8))
-    ax = data.plot(kind='hist', bins=50, normed=True, alpha=0.5, label='Data', legend=legend)
-    y_lim = (ax.get_ylim()[0], ax.get_ylim()[1] * 1.2)
-    x_lim = ax.get_xlim()
-
-    # Plot the best n distributions
-    for index in range(0, best_n):
-        # Get distribution and parameter
-        distribution_name = fitted_distributions[index]['distribution']
-        distribution = getattr(st, distribution_name)
-        parameters = fitted_distributions[index]['parameters']
-
-        # Get PDF and plot it
-        pdf = _get_pdf(distribution=distribution, parameters=parameters)
-        pdf.plot(lw=2, label=distribution_name.capitalize(), legend=legend, ax=ax)
-
-    # Set focus on histogram
-    plt.ylim(y_lim)
-    plt.xlim(x_lim)
-
-    # Set title and labels
-    ax.set_title(title)
-    ax.set_xlabel(xlabel=x_label)
-    ax.set_ylabel(ylabel=y_label)
-
-
-def best_fitting_distribution(data, best_n=5, n_bins=200, verbose=False):
-    """
-    Go over all defined distributions and fit them to the data. Sort them by their SSE and return a list of
-    dictionaries containing all fitted distribution parameters sorted by SSE in ascending order.
-
-    :param data:                1-dimensional numpy array or pandas DataFrame of shape (m, 1)
-    :param best_n               Integer. Number of best distributions to return.
-    :param n_bins:              Integer. Number of bins for histogram.
-    :param verbose:             True or False. True for verbose output
-
-    :return:                    List of dictionaries. Containts all distributions and their fitted parameters and SSE.
-
-    This is a modification of the code from the great answer from tmthydvnprt on stackoverflow.com:
-    https://stackoverflow.com/questions/6620471/fitting-empirical-distribution-to-theoretical-ones-with-scipy-python#answer-37616966
-
-    """
-    # Check if input is valid
-    check_integer(best_n, 'best_n')
-
-    check_integer(n_bins, 'n_bins')
-
-    check_boolean(verbose, 'verbose')
-
-    # Results list
-    results = []
-
-    # Estimate fit for each distribution
-    for distribution in _get_distributions():
-
-        # Get fitting results for distribution
-        distribution_fit = fit_distribution_to_data(data, distribution, n_bins=n_bins, verbose=verbose)
-
-        # Write results to results-list
-        if distribution_fit is not None:
-            results.append(distribution_fit)
-
-    # Sort ascending by SSE
-    results.sort(key=lambda item: item['sse'])
-
-    # Keep only the best n results and return them
-    results = results[0:best_n]
-    return results
-
-
-def fit_distribution_to_data(data, distribution, n_bins=200, verbose=False):
-    """
-    Try to fit the given distribution to the data and get the respective parameters. Additionally, calculate
-    the SSE. Return everything as dict.
-
-    :param data:                1-dimensional numpy array or pandas DataFrame of shape (m, 1)
-    :param distribution:        Distribution from scipy.stats (e.g. scipy.stats.norm)
-    :param n_bins:              Interger. Number of bins for histogram.
-    :param verbose:             True or False. True for verbose output.
-
-    :return:                    Dictionary containing: distribution name (string), sse (np.float64), parameters (tuple of floats)
+    Or use it to find the best fitting distribution in a set of 89 theoretical distributions:
+    best_n_fitting(n)
 
 
     This is a modification of the code from the great answer from tmthydvnprt on stackoverflow.com:
@@ -216,57 +96,276 @@ def fit_distribution_to_data(data, distribution, n_bins=200, verbose=False):
 
     """
 
-    # Check if inputs are valid
-    check_numpy_array_pandas_dataframe_series_1d(data, 'data')
+    def __init__(self, data, n_bins=200, verbose=False):
+        """
+        :param data:        1-dimensional numpy array, pandas Series or pandas Dataframe.
+        :param n_bins:      Integer (at least 10). Defines the number of bins for the histogram and the precision.
+        :param verbose:     True or False. Defines the verbosity of the output.
 
-    if distribution not in _get_distributions():
-        raise TypeError("Distribution must be a scipy.stats distribution and defined in _get_distributions().")
+        """
 
-    check_integer(n_bins, 'n_bins')
-    if n_bins < 20:
-        raise TypeError("Value for 'n_bins' must be at least 20 (200 would be better).")
-    elif n_bins > data.size:
-        raise TypeError("Value for 'n_bins' cannot be higher than the number of observations in the data.")
+        # Check if input types are valid
+        check_numpy_array_pandas_dataframe_series_1d(data, 'data')
+        check_integer(n_bins, 'n_bins')
+        check_boolean(verbose, 'verbose')
 
-    check_boolean(verbose, 'verbose')
+        # Convert data to pandas.Series if it is a numpy ndarray
+        if type(data) is np.ndarray:
+            data = pd.Series(data)
 
-    # Get histogram and bin_edges of data
-    histogram, bin_edges = np.histogram(data, bins=n_bins, density=True)
-    bin_edges = (bin_edges + np.roll(bin_edges, -1))[:-1] / 2.0
+        # Make sure n_bins is larger than 10
+        if n_bins < 10:
+            raise TypeError("Argument for parameter 'n_bins' must be at least 10.")
 
-    # Try to fit the distribution
-    try:
-        # Ignore warnings from data that can't be fit
-        with warnings.catch_warnings():
-            warnings.filterwarnings('ignore')
+        # Resize n_bins if it is too large
+        if n_bins > len(data):
+            n_bins = len(data)
 
-            # Fit distribution to data
-            parameters = distribution.fit(data)
+        # Assign input variables to object
+        self.data = data
+        self.n_bins = n_bins
+        self.verbose = verbose
 
-            # Get parameters from the fitted distribution
-            arg = parameters[:-2]
-            mean = parameters[-2]
-            standard_deviation = parameters[-1]
+    def fit(self, distribution):
+        """
+        Fit a scipy.stats distribution to the data.
 
-            # Calculate the fitted PDF
-            pdf = distribution.pdf(bin_edges, loc=mean, scale=standard_deviation, *arg)
+        :param distribution:        A scipy.stats distribution object (e.g. scipy.stats.norm). Defines the theoretical
+                                    distribution which will be fitted to the data.
 
-            # Calculate the SSE
-            sse = np.sum(np.power(histogram - pdf, 2.0))
+        :return:                    An object of class _Fitted_Distribution containing the distribution, the fitted
+                                    distribution parameters, the sum of squared errors of the distribution and the data.
 
-            # Create the result dictionary and return it
-            result = {'distribution': distribution.name,
-                      'sse': sse,
-                      'parameters': parameters}
+        """
 
-            return result
+        # Check if distribution is valid
+        if distribution not in _get_distributions():
+            raise TypeError("Argument '{0}' for parameter 'distribution' is not a valid distribution. Please use a scipy.stats distribution object.".format(
+                distribution,
+            ))
 
-    # Catch all exceptions and print them if verbose is True
-    except Exception as e:
-        if verbose:
-            print("Error at distribution '{0}':".format(distribution.name), e)
+        # Get histogram and bin_edges of data
+        histogram, bin_edges = np.histogram(self.data, bins=self.n_bins, density=True)
+        bin_edges = (bin_edges + np.roll(bin_edges, -1))[:-1] / 2.0
 
-        return None
+        # Try to fit the distribution
+        try:
+            # Ignore warnings from data that can't be fit
+            with warnings.catch_warnings():
+                warnings.filterwarnings('ignore')
+
+                # Fit distribution to data
+                parameters = distribution.fit(self.data)
+
+                # Get parameters from the fitted distribution
+                arg = parameters[:-2]
+                mean = parameters[-2]
+                standard_deviation = parameters[-1]
+
+                # Calculate the fitted PDF
+                pdf = distribution.pdf(bin_edges, loc=mean, scale=standard_deviation, *arg)
+
+                # Calculate the SSE
+                sse = np.sum(np.power(histogram - pdf, 2.0))
+
+                # Create fitted distribution object
+                fitted_distribution = _FittedDistribution(distribution=distribution,
+                                                          standard_deviation=standard_deviation,
+                                                          mean=mean,
+                                                          arg=arg,
+                                                          parameters=parameters,
+                                                          sse=sse,
+                                                          data=self.data)
+
+                return fitted_distribution
+
+        # Catch all exceptions and print them if verbose is True
+        except Exception as e:
+            if self.verbose:
+                print("Error at distribution '{0}':".format(distribution.name), e)
+
+            return None
+
+    def best_n_fitting(self, n):
+        """
+        Fit 89 scipy.stats distributions to the data. Return the n best distributions in terms of their SSE.
+
+        :param n:       Integer (larger than 1). Defines the number of distributions to return.
+
+        :return:        An object of class _Fitted_Distributions which contains n objects of class _Fitted_Distribution.
+                        All contain the respecitve distribution, the fitted distribution parameters, the sum of squared
+                        errors (SSE) of the distribution and the data.
+
+        """
+
+        # Check if input is valid
+        check_integer(n, 'n')
+
+        # Initialize results object
+        fitted = _FittedDistributions(data=self.data)
+
+        # Estimate fit for each distribution
+        for distribution in _get_distributions():
+
+            # Get fitting results for distribution
+            distribution_fit = self.fit(distribution)
+
+            # Write results to results-list
+            if distribution_fit is not None:
+                fitted.distributions.append(distribution_fit)
+
+        # Sort ascending by SSE
+        fitted.distributions.sort(key=lambda item: item.sse)
+
+        # Make sure n is not larger than the number of fitted distributions
+        if n > len(fitted.distributions):
+            n = len(fitted.distributions)
+
+        # Keep only the best n results and return them
+        fitted.distributions = fitted.distributions[0:n]
+        return fitted
+
+
+class _FittedDistribution:
+    """
+    Class for a single fitted distribution.
+
+    """
+
+    def __init__(self, distribution, standard_deviation, mean, arg, parameters, sse, data):
+        """
+        :param distribution:            A scipy.stats distribution object
+        :param standard_deviation:      Float. Standard deviation of the fitted distribution.
+        :param mean:                    Float. Mean of the fitted distribution.
+        :param arg:                     Tuple or list. Additional parameters of the fitted distribution.
+        :param parameters:              List of standard_deviation, mean and arg
+        :param sse:                     Float. Sum of squared errors of the fitted distribution.
+        :param data:                    1-dimensional pandas Series or DataFrame
+        """
+
+        # Assign input to object variables
+        self.distribution = distribution
+        self.standard_deviation = standard_deviation
+        self.mean = mean
+        self.arg = arg
+        self.parameters = parameters
+        self.sse = sse
+        self.data = data
+
+    def plot(self, x_label, title='default', y_label='Frequency', legend=True):
+        """
+        Plot a histogram of the data and the probability density function of the fitted distribution.
+
+        :param x_label:         String. Title of the x-axis.
+        :param title:           String. Title of the plot. If 'default', the default title will be used.
+        :param y_label:         String. Title of the y-axis.
+        :param legend:          Boolean. Defines if a legend will be shown.
+
+        """
+
+        # Check if input types are valid
+        check_string(x_label, 'x_label')
+        check_string(y_label, 'y_label')
+        check_string(title, 'title')
+        check_boolean(legend, 'legend')
+
+        # Get string of additional parameters
+        if len(self.arg) > 0:
+            parameters = str([round(x, 2) for x in self.arg])[1:-1]
+        else:
+            parameters = 'None'
+
+        # Set default title
+        if title == 'default':
+            title = "Histogram of {0} with the theoretical distribution {1}.\nSD: {2}, Mean: {3}, Additional parameters: {4}.".format(
+                x_label,
+                self.distribution.name.capitalize(),
+                round(self.standard_deviation, 2),
+                round(self.mean, 2),
+                parameters
+            )
+
+        # Create main plot
+        plt.figure(figsize=(12, 8))
+        ax = self.data.plot(kind='hist', bins=50, normed=True, alpha=0.5, label='Data', legend=legend)
+        y_lim = (ax.get_ylim()[0], ax.get_ylim()[1] * 1.2)
+        x_lim = ax.get_xlim()
+
+        # Get probability density function and plot it
+        pdf = _get_pdf(distribution=self.distribution, parameters=self.parameters)
+        pdf.plot(lw=2, label=self.distribution.name.capitalize(), legend=legend, ax=ax)
+
+        # Set focus on histogram
+        plt.ylim(y_lim)
+        plt.xlim(x_lim)
+
+        # Set title and labels
+        ax.set_title(title)
+        ax.set_xlabel(xlabel=x_label)
+        ax.set_ylabel(ylabel=y_label)
+
+
+class _FittedDistributions:
+    """
+    Class for multiple fitted distributions.
+
+    """
+
+    def __init__(self, data):
+        """
+        :param data:        1-dimensional pandas Series or DataFrame.
+
+        """
+
+        self.distributions = []
+        self.data = data
+
+    def plot(self, x_label, title='default', y_label='Frequency', legend=True):
+        """
+        Plot a histogram of the data and the probability density functions of the n best fitting distributions.
+
+        :param x_label:         String. Title of the x-axis.
+        :param title:           String. Title of the plot. If 'default', the default title will be used.
+        :param y_label:         String. Title of the y-axis.
+        :param legend:          Boolean. Defines if a legend will be shown.
+
+        """
+
+        # Check if input types are valid
+        check_string(x_label, 'x_label')
+        check_string(y_label, 'y_label')
+        check_string(title, 'title')
+        check_boolean(legend, 'legend')
+
+        # Set default title
+        if title == 'default':
+            title = "Comparison between the best {0} fitting distributions.".format(len(self.distributions))
+
+        # Create main plot
+        plt.figure(figsize=(12, 8))
+        ax = self.data.plot(kind='hist', bins=50, normed=True, alpha=0.5, label='Data', legend=legend)
+        y_lim = (ax.get_ylim()[0], ax.get_ylim()[1] * 1.2)
+        x_lim = ax.get_xlim()
+
+        # Plot the best n distributions
+        for index in range(0, len(self.distributions)):
+            # Get distribution and parameter
+            distribution = self.distributions[index].distribution
+            distribution_name = distribution.name
+            parameters = self.distributions[index].parameters
+
+            # Get PDF and plot it
+            pdf = _get_pdf(distribution=distribution, parameters=parameters)
+            pdf.plot(lw=2, label=distribution_name.capitalize(), legend=legend, ax=ax)
+
+        # Set focus on histogram
+        plt.ylim(y_lim)
+        plt.xlim(x_lim)
+
+        # Set title and labels
+        ax.set_title(title)
+        ax.set_xlabel(xlabel=x_label)
+        ax.set_ylabel(ylabel=y_label)
 
 
 def _get_distributions():
@@ -297,7 +396,7 @@ def _get_distributions():
 
 def _get_pdf(distribution, parameters, size=1000):
     """
-    Generate the probability distribution function of a distribution.
+    Generate the probability density function of a distribution.
 
     :param dist:        A scipy.stats distribution
     :param params:      Tuple or list of floats. Parameters from fitted distribution.
@@ -330,7 +429,7 @@ def _get_pdf(distribution, parameters, size=1000):
         start = distribution.ppf(0.01, *arg, loc=mean, scale=standard_deviation)
         end = distribution.ppf(0.99, *arg, loc=mean, scale=standard_deviation)
     else:
-        start= distribution.ppf(0.01, loc=mean, scale=standard_deviation)
+        start = distribution.ppf(0.01, loc=mean, scale=standard_deviation)
         end = distribution.ppf(0.99, loc=mean, scale=standard_deviation)
 
     # Build PDF and turn into pandas Series
