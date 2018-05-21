@@ -16,6 +16,7 @@
 # ==============================================================================
 """ Helper functions """
 
+
 def type_as_string(obj):
     """
     Takes an object and returns its type as string.
